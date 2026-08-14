@@ -6,69 +6,252 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
-## How to investigate
+# AGENTS.md – Warmaster
 
-Read the highest-value sources first:
+This file defines how AI coding agents (e.g. GPT-based assistants) should behave when working in the **Warmaster** codebase.
 
-- `README*`, root manifests, workspace config, lockfiles
-- build, test, lint, formatter, typecheck, and codegen config
-- CI workflows and pre-commit / task runner config
-- existing instruction files (`AGENTS.md`, `CLAUDE.md`, `.cursor/rules/`, `.cursorrules`, `.github/copilot-instructions.md`)
-- repo-local OpenCode config such as `opencode.json`
+Treat this as a contract: follow these rules unless explicitly overridden by a human.
 
-If architecture is still unclear after reading config and docs, inspect a small number of representative code files to find the real entrypoints, package boundaries, and execution flow. Prefer reading the files that explain how the system is wired together over random leaf files.
+---
 
-Prefer executable sources of truth over prose. If docs conflict with config or scripts, trust the executable source and only keep what you can verify.
+## 1. Project Overview
 
-## What to extract
+- **Name:** Warmaster
+- **Type:** Monorepo web application
+- **Frontend:**
+  - Language: TypeScript
+  - Framework: Next.js (App Router)
+  - UI: React + ShadCN
+- **Backend:** TBD (assume Next.js API routes / server actions until specified otherwise)
+- **Design Architecture:** Feature-Sliced Design (FSD)
+- **Auth:** NextAuth with a free provider (e.g. GitHub, Google, etc.)
+- **Primary AI Model:** GPT-based assistant
 
-Look for the highest-signal facts for an agent working in this repo:
+Agents should assume this is a production-grade app and avoid experimental changes without explicit permission.
 
-- exact developer commands, especially non-obvious ones
-- how to run a single test, a single package, or a focused verification step
-- required command order when it matters, such as `lint -> typecheck -> test`
-- monorepo or multi-package boundaries, ownership of major directories, and the real app/library entrypoints
-- framework or toolchain quirks: generated code, migrations, codegen, build artifacts, special env loading, dev servers, infra deploy flow
-- repo-specific style or workflow conventions that differ from defaults
-- testing quirks: fixtures, integration test prerequisites, snapshot workflows, required services, flaky or expensive suites
-- important constraints from existing instruction files worth preserving
+---
 
-Good `AGENTS.md` content is usually hard-earned context that took reading multiple files to infer.
+## 2. Repository Structure (Feature-Sliced Design)
 
-## Questions
+The monorepo should follow Feature-Sliced Design principles. A typical layout:
 
-Only ask the user questions if the repo cannot answer something important. Use the `question` tool for one short batch at most.
+```text
+/
+  apps/
+    web/                # Next.js app (App Router)
+  packages/
+    ui/                 # Shared UI components (ShadCN-based)
+    config/             # Shared configs (TS, ESLint, Prettier, Tailwind, etc.)
+  features/             # Feature slices (e.g. auth, dashboard, game, etc.)
+    auth/
+    dashboard/
+    game/
+  entities/             # Domain entities (e.g. user, game, match, etc.)
+    user/
+    game/
+  shared/               # Cross-cutting utilities
+    api/
+    lib/
+    ui/
+  AGENTS.md
+  package.json
+  ...
+```
 
-Good questions:
+Key FSD rules for agents:
 
-- undocumented team conventions
-- branch / PR / release expectations
-- missing setup or test prerequisites that are known but not written down
+- **Never** import from a “higher” layer into a “lower” layer.
+  - Allowed: `features/*` → `entities/*`, `shared/*`
+  - Not allowed: `entities/*` → `features/*`, `shared/*` → `features/*`
+- Keep slices **feature-driven**, not technical-driven (e.g. `auth`, `game`, `dashboard`, not `components`, `hooks`).
+- Shared code goes under `shared/` only if reused across multiple features/entities.
+- Each slice should have a clear `index.ts` exporting its public API.
 
-Do not ask about anything the repo already makes clear.
+If you’re unsure about FSD, ask before restructuring folders or moving code between layers.
 
-## Writing rules
+---
 
-Include only high-signal, repo-specific guidance such as:
+## 3. Development Commands
 
-- exact commands and shortcuts the agent would otherwise guess wrong
-- architecture notes that are not obvious from filenames
-- conventions that differ from language or framework defaults
-- setup requirements, environment quirks, and operational gotchas
-- references to existing instruction sources that matter
+All commands are run from the repo root using `npm`.
 
-Exclude:
+```bash
+# Install dependencies
+npm install
 
-- generic software advice
-- long tutorials or exhaustive file trees
-- obvious language conventions
-- speculative claims or anything you could not verify
-- content better stored in another file referenced via `opencode.json` `instructions`
+# Run local dev server (Next.js)
+npm run dev
 
-When in doubt, omit.
+# Build the app
+npm run build
 
-Prefer short sections and bullets. If the repo is simple, keep the file simple. If the repo is large, summarize the few structural facts that actually change how an agent should work.
+# Start production server
+npm run start
 
-If `AGENTS.md` already exists at `/`, improve it in place rather than rewriting blindly. Preserve verified useful guidance, delete fluff or stale claims, and reconcile it with the current codebase.
+# Run linter
+npm run lint
+
+# Run tests (Jest + React Testing Library)
+npm run test
+```
+
+If new scripts are added (e.g. `test:watch`, `test:e2e`), update this section accordingly.
+
+---
+
+## 4. Code Style & Tooling
+
+- **Language:** TypeScript (strict mode preferred)
+- **Formatter:** Prettier (run before committing)
+- **Linter:** ESLint (as configured in the repo)
+- **Testing:**
+  - Framework: Jest
+  - React testing: React Testing Library
+  - Tests should live alongside code (e.g. `Component.test.tsx`) or in `__tests__` folders per feature.
+
+Agents must:
+
+- Respect existing Prettier/ESLint configs.
+- Not disable rules without a clear reason and a comment.
+- Write tests for new UI components and non-trivial logic.
+- Prefer RTL queries (`getByRole`, `getByLabelText`, `getByText`, etc.) over implementation details.
+
+---
+
+## 5. Frontend Guidelines (Next.js + App Router + ShadCN)
+
+- Use **App Router** conventions:
+  - `app/` for routes, layouts, loading, error boundaries.
+  - Server Components by default; use `"use client"` only when needed (interactivity, hooks, browser APIs).
+- Use **ShadCN** components from `packages/ui` or `shared/ui`. Do not recreate equivalent components unless there’s a strong reason.
+- Co-locate feature-specific components inside their feature slice, e.g.:
+  - `features/auth/ui/login-form.tsx`
+  - `features/game/ui/game-board.tsx`
+- Use TypeScript types/interfaces for props and API responses; avoid `any`.
+
+Agents should:
+
+- Reuse existing UI patterns and ShadCN components.
+- Follow existing naming conventions (e.g. `kebab-case` for files, `PascalCase` for components).
+- Keep components small and focused; extract hooks and utilities when appropriate.
+
+---
+
+## 6. Authentication & Security
+
+- **Auth library:** NextAuth
+- **Provider:** Google
+- Auth logic should live in a dedicated feature slice, e.g. `features/auth`.
+- Sensitive operations (sessions, tokens, server actions) must be implemented on the server side.
+
+Agents must:
+
+- Never hardcode secrets or tokens.
+- Use environment variables for all sensitive configuration.
+- Not modify auth flows, session handling, or security-related code without explicit permission.
+- Ask before adding new auth providers or changing session strategies.
+
+---
+
+## 7. Testing Strategy
+
+- **Unit tests:**
+  - For utility functions, hooks, and small components.
+- **Component tests:**
+  - For UI components using React Testing Library.
+- **Integration tests:**
+  - For feature slices where multiple components interact.
+
+Agents should:
+
+- Add tests for new components and non-trivial logic.
+- Keep tests readable and focused on behavior, not implementation.
+- Use descriptive test names: `it("shows error message when login fails")`.
+- Not remove or ignore failing tests without fixing or discussing with a human.
+
+---
+
+## 8. Agent Permissions & Boundaries
+
+You are a GPT-based coding assistant for Warmaster.
+
+**You are allowed to:**
+
+- Edit frontend files under:
+  - `apps/web`
+  - `features/**`
+  - `entities/**`
+  - `shared/**`
+  - `packages/ui`
+- Add new components, hooks, utilities, and tests within these areas.
+- Refactor code while preserving behavior and FSD layering rules.
+- Update documentation (including this `AGENTS.md`) to reflect actual usage.
+
+**You must ask for permission before:**
+
+- Changing anything outside frontend (e.g. backend architecture, DB schema, infra, CI/CD).
+- Modifying auth, security, or session-related code.
+- Adding new dependencies or changing package manager configs.
+- Restructuring the monorepo layout or FSD layers.
+- Changing public API contracts or breaking existing interfaces.
+
+If a requested task touches any of the above, explicitly ask:
+
+> “This change affects [auth/backend/infra/etc.]. Do you want me to proceed, and if so, with what constraints?”
+
+---
+
+## 9. Working with GPT-based Agents
+
+When generating code:
+
+- Prefer clear, typed, and idiomatic React/Next.js/TS patterns.
+- Avoid over-engineering; keep solutions simple and consistent with existing code.
+- When in doubt about architecture or FSD placement, propose 1–2 options and ask which to use.
+- Always consider testability when writing new components or hooks.
+
+When explaining changes:
+
+- Be concise but explicit about:
+  - What files were changed/added.
+  - Why a particular pattern or structure was chosen.
+  - Any trade-offs or assumptions made.
+
+---
+
+## 10. Example: Adding a New Feature Slice
+
+If asked to add a new feature (e.g. `leaderboard`):
+
+1. Create a new slice under `features/leaderboard`:
+   ```text
+   features/
+     leaderboard/
+       ui/
+       lib/
+       index.ts
+   ```
+2. Implement UI components in `features/leaderboard/ui`.
+3. Use entities from `entities/*` and shared utilities from `shared/*` as needed.
+4. Export public API from `features/leaderboard/index.ts`.
+5. Add tests under `features/leaderboard/__tests__` or alongside components.
+6. Integrate into the app via `apps/web/app` routes or layouts.
+
+Agents should follow this pattern for all new features unless told otherwise.
+
+---
+
+## 11. Maintenance & Evolution
+
+- Update this `AGENTS.md` when:
+  - New major patterns or conventions are adopted.
+  - The backend stack is finalized.
+  - Testing or deployment strategies change significantly.
+- Keep it concise and actionable; avoid duplicating detailed docs that live elsewhere (e.g. `README.md`, `CONTRIBUTING.md`).
+
+---
+
+**Default rule:**  
+If something is unclear or could impact architecture, security, or stability, **ask before changing**.
 
 <!-- END:nextjs-agent-rules -->
