@@ -16,7 +16,7 @@ Treat this as a contract: follow these rules unless explicitly overridden by a h
 
 ## 1. Project Overview
 
-- **Name:** Warmaster
+- **Name:** Overseer
 - **Type:** Monorepo web application
 - **Frontend:**
   - Language: TypeScript
