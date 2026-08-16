@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Campaign {
+  id        String         @id @default(cuid())
+  name      String
+  status    String         @default("active")
+  radius    Int            @default(3)
+  createdAt DateTime       @default(now())
+  players   Player[]
+  map       PlanetMap?
+  turns     CampaignTurn[]
+}
+
+model Player {
+  id        String     @id @default(cuid())
+  campaignId String
+  campaign  Campaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name      String
+  color     String
+  turnOrder Int
+  hexes     Hex[]
+  attacks   Attack[]   @relation("Attacker")
+  defenses  Attack[]   @relation("Defender")
+  turns     CampaignTurn[]
+
+  @@unique([campaignId, turnOrder])
+}
+
+model PlanetMap {
+  id         String   @id @default(cuid())
+  campaignId String   @unique
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  hexes      Hex[]
+}
+
+model Hex {
+  id       String     @id @default(cuid())
+  mapId    String
+  map      PlanetMap  @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  q        Int
+  r        Int
+  terrain  String     @default("plain")
+  ownerId  String?
+  owner    Player?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@unique([mapId, q, r])
+}
+
+model CampaignTurn {
+  id           String    @id @default(cuid())
+  campaignId   String
+  campaign     Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  turnNumber   Int
+  status       String    @default("active")
+  currentPlayerId String?
+  currentPlayer Player?   @relation(fields: [currentPlayerId], references: [id], onDelete: SetNull)
+  attacks      Attack[]
+
+  @@unique([campaignId, turnNumber])
+}
+
+model Attack {
+  id        String       @id @default(cuid())
+  turnId    String
+  turn      CampaignTurn @relation(fields: [turnId], references: [id], onDelete: Cascade)
+  attackerId String
+  attacker  Player       @relation("Attacker", fields: [attackerId], references: [id], onDelete: Cascade)
+  fromHexId String?
+  toHexId   String
+  outcome   String       @default("pending")
+  createdAt DateTime     @default(now())
+  defenderId String?
+  defender  Player?      @relation("Defender", fields: [defenderId], references: [id], onDelete: SetNull)
+}

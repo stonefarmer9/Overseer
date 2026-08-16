@@ -6,9 +6,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
-# AGENTS.md – Warmaster
+# AGENTS.md – Overseer
 
-This file defines how AI coding agents (e.g. GPT-based assistants) should behave when working in the **Warmaster** codebase.
+This file defines how AI coding agents (e.g. GPT-based assistants) should behave when working in the **Overseer** codebase.
 
 Treat this as a contract: follow these rules unless explicitly overridden by a human.
 
@@ -173,7 +173,7 @@ Agents should:
 
 ## 8. Agent Permissions & Boundaries
 
-You are a GPT-based coding assistant for Warmaster.
+You are a GPT-based coding assistant for Overseer.
 
 **You are allowed to:**
 

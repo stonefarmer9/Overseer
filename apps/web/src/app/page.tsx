@@ -1,68 +1,56 @@
-import Image from 'next/image';
-import styles from './page.module.css';
+import Link from 'next/link';
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@warmaster/ui';
+import { getCampaigns } from '@/entities/campaign';
 
-export default function Home() {
+export const dynamic = 'force-dynamic';
+
+export default async function HomePage() {
+  const campaigns = await getCampaigns();
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>
-            To get started, edit the <code className={styles.code}>page.tsx</code> file.
-          </h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{' '}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{' '}
-            or the{' '}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{' '}
-            center.
-          </p>
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Campaigns</h1>
+        <Link href="/campaigns/new">
+          <Button>New campaign</Button>
+        </Link>
+      </div>
+
+      {campaigns.length === 0 ? (
+        <p className="text-muted-foreground">
+          No campaigns yet. Create your first planet to conquer.
+        </p>
+      ) : (
+        <div className="grid gap-3">
+          {campaigns.map((campaign) => (
+            <Link key={campaign.id} href={`/campaigns/${campaign.id}`}>
+              <Card className="transition-colors hover:bg-accent/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    {campaign.name}
+                    <span className="text-sm font-normal text-muted-foreground">
+                      radius {campaign.radius}
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {campaign.players.map((p) => (
+                      <span key={p.id} className="inline-flex items-center gap-1 text-sm">
+                        <span
+                          className="size-2 rounded-full"
+                          style={{ backgroundColor: p.color }}
+                        />
+                        {p.name}
+                      </span>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      )}
+    </main>
   );
 }
