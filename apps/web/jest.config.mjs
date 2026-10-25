@@ -9,8 +9,6 @@ const config = {
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    '^@features/(.*)$': '<rootDir>/src/features/$1',
-    '^@entities/(.*)$': '<rootDir>/src/entities/$1',
     '^@shared/(.*)$': '<rootDir>/src/shared/$1',
   },
 };
