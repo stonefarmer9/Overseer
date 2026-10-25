@@ -39,24 +39,29 @@ The monorepo should follow Feature-Sliced Design principles. A typical layout:
 /
   apps/
     web/                # Next.js app (App Router)
+      src/
+        app/            # Routes, layouts, global styles (App Router)
+        features/       # Feature slices (e.g. auth, dashboard, game, etc.)
+          auth/
+          dashboard/
+          game/
+        entities/       # Domain entities (e.g. user, game, match, etc.)
+          user/
+          game/
+        widgets/        # Large composed UI blocks (optional)
+        shared/         # Cross-cutting utilities
+          api/          # Infrastructure clients (e.g. Prisma client)
+          lib/
+          ui/
   packages/
-    ui/                 # Shared UI components (ShadCN-based)
+    ui/                 # Shared UI components (ShadCN-based, imported as @warmaster/ui)
     config/             # Shared configs (TS, ESLint, Prettier, Tailwind, etc.)
-  features/             # Feature slices (e.g. auth, dashboard, game, etc.)
-    auth/
-    dashboard/
-    game/
-  entities/             # Domain entities (e.g. user, game, match, etc.)
-    user/
-    game/
-  shared/               # Cross-cutting utilities
-    api/
-    lib/
-    ui/
   AGENTS.md
   package.json
   ...
 ```
+
+The FSD layers live under `apps/web/src/`, not at the repo root. Import them with the `@/` alias (e.g. `@/features/auth`, `@/shared/api/db`).
 
 Key FSD rules for agents:
 
