@@ -4,11 +4,11 @@ Goal: render a map of hexes, let a player select a hex, open a drawer, assign an
 
 This is a code-along. Each step says what we are doing, why, and gives the code. Type it yourself rather than pasting, so the reasons sink in.
 
-All paths are relative to `apps/web/src/` unless stated otherwise.
+Every file heading in this guide shows the full path from the repository root. For example, `apps/web/src/shared/lib/hex-grid/coords.ts` is the complete path to `coords.ts`. Create files at exactly the path shown.
 
 **Assumptions used in the code below** (change them and the code follows):
 
-- Axial coordinates, pointy-top hexes, radius 3 (37 hexes).
+- Axial coordinates, flat-top hexes, radius 3 (37 hexes).
 - The empty hex-grid files move from `shared/api/lib/hex-grid` to `shared/lib/hex-grid`.
 - A new `/map` route, so the placeholder home page stays.
 - `Dialog` for the drawer.
@@ -49,7 +49,7 @@ rmdir apps/web/src/shared/api/lib/hex-grid apps/web/src/shared/api/lib
 
 **Why axial coordinates:** Each hex is `{ q, r }`. Neighbours and distance are simple arithmetic with no special cases. A third value `s = -q - r` is implied, which is why the maths below uses `dq + dr`.
 
-### `coords.ts`
+### `apps/web/src/shared/lib/hex-grid/coords.ts`
 
 ```ts
 export type Hex = { q: number; r: number };
@@ -90,7 +90,7 @@ export function hexesInRadius(radius: number): Hex[] {
 
 **Why the `rMin`/`rMax` lines:** For a given `q`, `r` can only range over values that keep the implied `s = -q - r` within `[-radius, radius]`. Without that bound you'd get a hexagon-shaped hole or extra hexes.
 
-### `layout.ts`
+### `apps/web/src/shared/lib/hex-grid/layout.ts`
 
 ```ts
 import type { Hex } from './coords';
@@ -99,18 +99,18 @@ const SQRT3 = Math.sqrt(3);
 
 export type Point = { x: number; y: number };
 
-// Pointy-top: the top of each hex is a point.
+// Flat-top: the top and bottom of each hex are flat edges.
 export function hexToPixel(h: Hex, size: number): Point {
   return {
-    x: size * (SQRT3 * h.q + (SQRT3 / 2) * h.r),
-    y: size * (1.5 * h.r),
+    x: size * 1.5 * h.q,
+    y: size * ((SQRT3 / 2) * h.q + SQRT3 * h.r),
   };
 }
 
 // The six corners of a hex, for an SVG <polygon>.
 export function hexCorners(centre: Point, size: number): Point[] {
   return Array.from({ length: 6 }, (_, i) => {
-    const angle = (Math.PI / 180) * (60 * i - 30);
+    const angle = (Math.PI / 180) * (60 * i);
     return {
       x: centre.x + size * Math.cos(angle),
       y: centre.y + size * Math.sin(angle),
@@ -119,9 +119,9 @@ export function hexCorners(centre: Point, size: number): Point[] {
 }
 ```
 
-**Why `- 30`:** Pointy-top hexes have a corner pointing straight up. With SVG's y-down coordinates, the offset puts the corners at the right angles.
+**Why no offset:** Flat-top hexes have corners at 0°, 60°, 120° and so on, so the left and right points sit on the x-axis and the top and bottom edges are flat.
 
-### `index.ts`
+### `apps/web/src/shared/lib/hex-grid/index.ts`
 
 ```ts
 export * from './coords';
@@ -130,10 +130,10 @@ export * from './layout';
 
 ### Tests
 
-Put these next to the code, as `hex-grid.test.ts`:
+Put these next to the code, at `apps/web/src/shared/lib/hex-grid/hex-grid.test.ts`:
 
 ```ts
-import { distance, hexesInRadius, neighbours } from './index';
+import { distance, hexCorners, hexesInRadius, hexToPixel, neighbours } from './index';
 
 describe('hex-grid', () => {
   it('returns six distinct neighbours of the origin', () => {
@@ -148,6 +148,12 @@ describe('hex-grid', () => {
 
   it('builds a radius-3 map with 37 hexes', () => {
     expect(hexesInRadius(3)).toHaveLength(37);
+  });
+
+  it('puts the first corner of a flat-top hex on the x-axis', () => {
+    const [first] = hexCorners(hexToPixel({ q: 0, r: 0 }, 10), 10);
+    expect(first.x).toBeCloseTo(10);
+    expect(first.y).toBeCloseTo(0);
   });
 });
 ```
@@ -164,7 +170,7 @@ describe('hex-grid', () => {
 
 **Why ask first:** `AGENTS.md` says schema changes need permission.
 
-### `prisma/schema.prisma`
+### `apps/web/prisma/schema.prisma`
 
 ```prisma
 model Hex {
@@ -189,7 +195,7 @@ npx prisma migrate dev --name add-hex
 npx prisma generate
 ```
 
-### `prisma/seed.ts`
+### `apps/web/prisma/seed.ts`
 
 ```ts
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
@@ -230,7 +236,7 @@ Prisma 7 moved the seed command into `prisma.config.ts`. Check the current docs 
 
 **Why a constant:** The list changes rarely and is small. A constant is typed, needs no database, and can be imported by client and server code.
 
-### `model/owners.ts`
+### `apps/web/src/entities/owner/model/owners.ts`
 
 ```ts
 export const OWNERS = [
@@ -251,7 +257,7 @@ export function getOwner(id: string): Owner | undefined {
 
 **Why `getOwner` takes a `string`:** Data from the browser is untyped, so the action has to check at runtime. The function returns `undefined` for unknown ids.
 
-### `index.ts`
+### `apps/web/src/entities/owner/index.ts`
 
 ```ts
 export * from './model/owners';
@@ -263,7 +269,7 @@ export * from './model/owners';
 
 **What:** The data type, a read function, and a single SVG cell.
 
-### `model/types.ts`
+### `apps/web/src/entities/hex/model/types.ts`
 
 ```ts
 export type HexRecord = {
@@ -276,7 +282,7 @@ export type HexRecord = {
 
 **Why not use Prisma's type directly:** The UI shouldn't depend on Prisma. This type is what crosses to the client.
 
-### `api/get-hexes.ts`
+### `apps/web/src/entities/hex/api/get-hexes.ts`
 
 ```ts
 import 'server-only';
@@ -295,7 +301,7 @@ export async function getHexes(): Promise<HexRecord[]> {
 
 **Why `server-only`:** It stops this file from being bundled into client code.
 
-### `ui/hex-cell.tsx`
+### `apps/web/src/entities/hex/ui/hex-cell.tsx`
 
 ```tsx
 import { hexCorners, hexToPixel } from '@/shared/lib/hex-grid';
@@ -338,7 +344,7 @@ export function HexCell({ hex, owner, onSelect }: HexCellProps) {
 
 **Why `role` and `aria-label`:** They make the cell reachable by keyboard and easy to query in tests.
 
-### `index.ts`
+### `apps/web/src/entities/hex/index.ts`
 
 ```ts
 export { HexCell } from './ui/hex-cell';
@@ -356,7 +362,7 @@ export type { HexRecord } from './model/types';
 
 **Why validate on the server:** Anything from the client can be forged. The UI only offers valid owners, but the action must check again.
 
-### `api/assign-hex-owner.ts`
+### `apps/web/src/features/assign-hex-owner/api/assign-hex-owner.ts`
 
 ```ts
 'use server';
@@ -396,13 +402,20 @@ export async function assignHexOwner(input: AssignInput): Promise<AssignResult> 
 
 **Why `catch {}` with no detail:** Prisma's error messages are for developers. A generic message avoids leaking internals.
 
-### `ui/assign-owner-drawer.tsx`
+### `apps/web/src/features/assign-hex-owner/ui/assign-owner-drawer.tsx`
 
 ```tsx
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, Button } from '@warmaster/ui';
+import {
+  Button,
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from '@warmaster/ui';
 import { OWNERS, type OwnerId } from '@/entities/owner';
 import type { HexRecord } from '@/entities/hex';
 import { assignHexOwner } from '../api/assign-hex-owner';
@@ -433,13 +446,14 @@ export function AssignOwnerDrawer({ hex, open, onOpenChange, onAssigned }: Props
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Assign owner</DialogTitle>
-        </DialogHeader>
+    <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>Assign owner</DrawerTitle>
+          <DrawerDescription>{hex ? `Hex ${hex.q},${hex.r}` : ''}</DrawerDescription>
+        </DrawerHeader>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 p-4">
           {OWNERS.map((o) => (
             <Button key={o.id} disabled={pending} onClick={() => assign(o.id)}>
               {o.name}
@@ -450,9 +464,13 @@ export function AssignOwnerDrawer({ hex, open, onOpenChange, onAssigned }: Props
           </Button>
         </div>
 
-        {error && <p role="alert">{error}</p>}
-      </DialogContent>
-    </Dialog>
+        {error && (
+          <p role="alert" className="p-4 text-destructive">
+            {error}
+          </p>
+        )}
+      </DrawerContent>
+    </Drawer>
   );
 }
 ```
@@ -463,9 +481,14 @@ export function AssignOwnerDrawer({ hex, open, onOpenChange, onAssigned }: Props
 
 **Why buttons:** With three owners, one tap is quicker than opening a select. Switch to `Select` (Decision H) when the list grows.
 
-**Check the imports:** The names from `@warmaster/ui` are my best guess. Compare them with what that package actually exports.
+**Why a right-hand drawer:** The shadcn `Drawer` (built on `vaul`) slides in from whichever edge `direction` names. `direction="right"` pins it to the right of the page. Nothing else in the component changes.
 
-### `index.ts`
+**Before this compiles:** Two fixes in `packages/ui`, both covered in Step 6:
+
+- `src/components/ui/drawer.tsx` imports `cn` from `"cn"`. Change it to `"../../lib/utils"`, as `dialog.tsx` does.
+- `src/index.ts` doesn't export the drawer parts yet. Add them (Step 6).
+
+### `apps/web/src/features/assign-hex-owner/index.ts`
 
 ```ts
 export { AssignOwnerDrawer } from './ui/assign-owner-drawer';
@@ -474,9 +497,44 @@ export { assignHexOwner } from './api/assign-hex-owner';
 
 ---
 
-## Step 6: Why `Dialog` for now
+## Step 6: Use the shadcn drawer from the right
 
-The drawer is a single component, so you can swap `Dialog` for a `Sheet` later by editing one file. Adding `Sheet` may need a new dependency (`vaul`), which needs approval. Start with `Dialog`.
+**What:** Use the shadcn `Drawer` that's already installed in `packages/ui`, opened from the right-hand side of the page.
+
+**Why not `Dialog` or `Sheet`:** `Dialog` is a centred modal. shadcn's `Sheet` would be a second, near-identical component. The installed `Drawer` already supports a right-hand direction through `direction="right"`, so one component covers it. No new dependency is needed, because `vaul` is already in `packages/ui/package.json`.
+
+**Fix 1: the `cn` import.** In `packages/ui/src/components/ui/drawer.tsx`, change:
+
+```ts
+import { cn } from 'cn';
+```
+
+to:
+
+```ts
+import { cn } from '../../lib/utils';
+```
+
+**Fix 2: export the drawer.** In `packages/ui/src/index.ts`, add this block, following the dialog exports:
+
+```ts
+export {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerPortal,
+  DrawerTitle,
+  DrawerTrigger,
+} from './components/ui/drawer';
+```
+
+**Fix 3: formatting.** `drawer.tsx` uses double quotes and no semicolons, unlike the rest of the package. Run Prettier on it.
+
+**Usage:** `AssignOwnerDrawer` (Step 5) sets `direction="right"` on `Drawer`. To change the side later, change that one prop.
 
 ---
 
@@ -488,7 +546,7 @@ The drawer is a single component, so you can swap `Dialog` for a `Sheet` later b
 
 **Why it's a client component:** It holds `selectedId` and handles clicks.
 
-### `ui/hex-map.tsx`
+### `apps/web/src/widgets/hex-map/ui/hex-map.tsx`
 
 ```tsx
 'use client';
@@ -556,7 +614,7 @@ function computeViewBox(hexes: HexRecord[], size: number): string {
 
 **Why `onOpenChange` ignores `true`:** The drawer only opens by selecting a hex. The `open` prop already handles that.
 
-### `index.ts`
+### `apps/web/src/widgets/hex-map/index.ts`
 
 ```ts
 export { HexMap } from './ui/hex-map';
@@ -566,7 +624,7 @@ export { HexMap } from './ui/hex-map';
 
 ---
 
-## Step 8: The page (`app/map/page.tsx`)
+## Step 8: The page (`apps/web/src/app/map/page.tsx`)
 
 **What:** A Server Component that loads the data and renders the widget.
 
@@ -596,18 +654,23 @@ export default async function MapPage() {
 
 **Test behaviour through the UI.** Query by role and name, not CSS classes.
 
-### `HexCell`
+### `apps/web/src/entities/hex/ui/hex-cell.test.tsx`
 
 ```tsx
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactElement } from 'react';
 import { HexCell } from './hex-cell';
 
 const hex = { id: 'a', q: 0, r: 0, ownerId: null };
 
+function renderCell(ui: ReactElement) {
+  return render(<svg>{ui}</svg>);
+}
+
 it('calls onSelect when the hex is clicked', async () => {
   const onSelect = jest.fn();
-  render(<HexCell hex={hex} onSelect={onSelect} />);
+  renderCell(<HexCell hex={hex} onSelect={onSelect} />);
 
   await userEvent.click(screen.getByRole('button', { name: 'Hex 0,0' }));
 
@@ -615,7 +678,7 @@ it('calls onSelect when the hex is clicked', async () => {
 });
 
 it('fills the hex with the owner colour', () => {
-  const { container } = render(
+  const { container } = renderCell(
     <HexCell hex={hex} owner={{ id: 'red', name: 'Red', colour: '#dc2626' }} onSelect={() => {}} />
   );
 
@@ -623,26 +686,93 @@ it('fills the hex with the owner colour', () => {
 });
 ```
 
-**Why `userEvent` may need installing:** If `@testing-library/user-event` isn't in `package.json`, it's a new dependency and needs approval. Use `fireEvent.click` from `@testing-library/react` if you'd rather not add it.
+**Why the `<svg>` wrapper:** `HexCell` renders `<g>` and `<polygon>`, which only work inside an SVG. Rendering it directly into a `<div>` makes React create unknown HTML elements and print a warning. In the app, `HexMap` already renders cells inside an `<svg>`, so the wrapper is only needed in tests.
 
-### The assign flow
+**Why `userEvent`:** `@testing-library/user-event` is installed in `apps/web`. It simulates clicks the way a user would. `fireEvent.click` from `@testing-library/react` also works if you don't need that.
 
-Mock the server action so the test doesn't touch the database:
+### `apps/web/src/features/assign-hex-owner/ui/assign-owner-drawer.test.tsx`
+
+The drawer test mocks the server action, so it never touches the database. It mocks the file the drawer imports (`../api/assign-hex-owner`), not the feature's `index.ts`, because the drawer doesn't import from the index:
 
 ```tsx
-jest.mock('@/features/assign-hex-owner', () => ({
-  AssignOwnerDrawer: jest.requireActual('@/features/assign-hex-owner').AssignOwnerDrawer,
-  assignHexOwner: jest.fn().mockResolvedValue({ ok: true }),
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { assignHexOwner } from '../api/assign-hex-owner';
+import { AssignOwnerDrawer } from './assign-owner-drawer';
+
+jest.mock('../api/assign-hex-owner', () => ({
+  assignHexOwner: jest.fn(),
 }));
+
+const mockedAssign = jest.mocked(assignHexOwner);
+const hex = { id: 'hex-1', q: 0, r: 0, ownerId: null };
+
+function renderDrawer() {
+  const onOpenChange = jest.fn();
+  const onAssigned = jest.fn();
+  render(<AssignOwnerDrawer hex={hex} open onOpenChange={onOpenChange} onAssigned={onAssigned} />);
+  return { onOpenChange, onAssigned };
+}
+
+beforeEach(() => {
+  mockedAssign.mockReset();
+  mockedAssign.mockResolvedValue({ ok: true });
+});
+
+it('assigns the chosen owner to the hex', async () => {
+  const { onAssigned } = renderDrawer();
+
+  await userEvent.click(screen.getByRole('button', { name: 'Red' }));
+
+  expect(mockedAssign).toHaveBeenCalledWith({ hexId: 'hex-1', ownerId: 'red' });
+  expect(onAssigned).toHaveBeenCalledWith('hex-1', 'red');
+});
+
+it('clears the owner when Clear owner is chosen', async () => {
+  const { onAssigned } = renderDrawer();
+
+  await userEvent.click(screen.getByRole('button', { name: 'Clear owner' }));
+
+  expect(mockedAssign).toHaveBeenCalledWith({ hexId: 'hex-1', ownerId: null });
+  expect(onAssigned).toHaveBeenCalledWith('hex-1', null);
+});
+
+it('shows an error message when the assignment fails', async () => {
+  mockedAssign.mockResolvedValue({ ok: false, error: 'Hex not found' });
+  const { onAssigned } = renderDrawer();
+
+  await userEvent.click(screen.getByRole('button', { name: 'Blue' }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Hex not found');
+  expect(onAssigned).not.toHaveBeenCalled();
+});
 ```
 
-Then test that selecting a hex, then an owner, changes the cell's fill.
-
-**Why mock:** The unit under test is the UI flow, not the database. Mocks also let you test the error path by returning `{ ok: false, error: 'Hex not found' }`.
-
-**Why the mock is partial:** Only the action needs replacing. The drawer stays real.
+**Why mock:** The unit under test is the UI flow, not the database. The error test returns `{ ok: false, error: 'Hex not found' }` to check the alert.
 
 **Test-file note:** Tests that import `db.ts` will hit `server-only`. Mock `@/shared/api/db` as well if a test pulls it in.
+
+**Jest setup for the drawer:** `vaul` (used by the shadcn `Drawer`) relies on two browser APIs that jsdom doesn't provide: pointer capture, and a `transform` value from `getComputedStyle`. Without them the drawer tests fail with `setPointerCapture is not a function` and `Cannot read properties of undefined (reading 'match')`. The shims go in `apps/web/jest.setup.ts`, which runs before every test file:
+
+```ts
+import '@testing-library/jest-dom';
+
+// jsdom doesn't implement these, but vaul (used by the shadcn Drawer) calls them.
+Element.prototype.setPointerCapture = () => {};
+Element.prototype.releasePointerCapture = () => {};
+Element.prototype.hasPointerCapture = () => false;
+
+const originalGetComputedStyle = window.getComputedStyle;
+window.getComputedStyle = (element: Element, pseudoElt?: string | null) => {
+  const style = originalGetComputedStyle(element, pseudoElt);
+  if (!style.transform) {
+    Object.defineProperty(style, 'transform', { value: 'none' });
+  }
+  return style;
+};
+```
+
+Add shims to this file only when a test fails for a jsdom reason. Don't change the component to work around jsdom.
 
 ---
 
@@ -662,9 +792,9 @@ Run Prettier on staged files before each commit, as the `prettier-on-commit` ski
 ## Decisions to confirm
 
 1. **Step 2:** Approve the `Hex` model and migration?
-2. **Step 1:** Pointy-top (as coded) or flat-top? Axial is the default.
+2. **Step 1:** Flat-top (as coded), or pointy-top? Axial is the default.
 3. **Step 1:** Radius 3, or another size?
 4. **Step 3:** The three owners and colours above: correct, or different?
-5. **Step 6:** `Dialog` (as coded), or a `Sheet` with a new dependency?
+5. **Step 6:** Right-hand drawer using the installed shadcn `Drawer` (as coded), or a bottom drawer?
 6. **Step 8:** `/map` (as coded), or replace the home page?
 7. **Step 1:** Move the empty files to `shared/lib/hex-grid` (as coded)?
