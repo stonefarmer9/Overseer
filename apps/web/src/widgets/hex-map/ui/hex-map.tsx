@@ -14,26 +14,34 @@ export function HexMap({ hexes: initial }: Props) {
   const [hexes, setHexes] = useState(initial);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  if (hexes.length === 0) {
+    return (
+      <div className="flex h-full w-full items-center justify-center p-4">
+        <p role="status" className="text-muted-foreground">
+          No hexes to show yet.
+        </p>
+      </div>
+    );
+  }
+
   const selected = hexes.find((hex) => hex.id === selectedId) ?? null;
 
   const viewBox = computeViewBox(hexes, SIZE);
 
-  if (hexes.length === 0) {
-    return <p role="status">No hexes to show yet.</p>;
-  }
-
   return (
     <>
-      <svg viewBox={viewBox} className="w-full h-auto">
-        {hexes.map((hex) => (
-          <HexCell
-            key={hex.id}
-            hex={hex}
-            owner={hex.ownerId ? getOwner(hex.ownerId) : undefined}
-            onSelect={setSelectedId}
-          />
-        ))}
-      </svg>
+      <div className="h-full w-full p-4">
+        <svg viewBox={viewBox} className="h-full w-full">
+          {hexes.map((hex) => (
+            <HexCell
+              key={hex.id}
+              hex={hex}
+              owner={hex.ownerId ? getOwner(hex.ownerId) : undefined}
+              onSelect={setSelectedId}
+            />
+          ))}
+        </svg>
+      </div>
       <AssignOwnerDrawer
         hex={selected}
         open={selected !== null}
