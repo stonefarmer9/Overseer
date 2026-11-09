@@ -20,6 +20,7 @@ export function HexCell({ hex, owner, onSelect }: HexCellProps) {
     <g
       role="button"
       tabIndex={0}
+      className="cursor-pointer outline-none focus-visible:[&>polygon]:stroke-3 focus-visible:[&>polygon]:stroke-blue-600"
       aria-label={`Hex ${hex.q},${hex.r}`}
       onClick={() => onSelect(hex.id)}
       onKeyDown={(e) => {
