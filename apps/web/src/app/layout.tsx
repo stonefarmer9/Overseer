@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { connection } from 'next/server';
+import { listCampaigns } from '@/entities/campaign/server';
 import { AppShell } from '@/widgets/app-shell';
 import './globals.css';
 
@@ -18,11 +20,14 @@ export const metadata: Metadata = {
   description: 'Warmaster web application',
 };
 
-export default function RootLayout({ children }: LayoutProps<'/'>) {
+export default async function RootLayout({ children }: LayoutProps<'/'>) {
+  await connection();
+  const campaigns = await listCampaigns();
+
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
-        <AppShell>{children}</AppShell>
+        <AppShell campaigns={campaigns}>{children}</AppShell>
       </body>
     </html>
   );

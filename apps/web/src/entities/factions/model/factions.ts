@@ -93,6 +93,6 @@ function isFactionId(value: unknown): value is FactionId {
   return typeof value === 'string' && Object.hasOwn(FACTIONS_BY_ID, value);
 }
 
-export function parseFactionId(raw: unknown): FactionId | null {
-  return isFactionId(raw) ? raw : null;
+export function parseFactionId(value: unknown): FactionId | null {
+  return isFactionId(value) ? value : null;
 }

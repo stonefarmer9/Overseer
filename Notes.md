@@ -1,0 +1,4 @@
+- In faction select dropdown, make groups collapsable
+- Lots of repetition in Factions types - mostly of player types
+- Attacker/attacker and Defender/defender need to be centralised so there is one point of control
+- STRINGS need to extracted and in a const ready for i18n

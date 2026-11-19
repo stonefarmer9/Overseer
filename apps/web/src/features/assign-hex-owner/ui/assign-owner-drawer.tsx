@@ -7,28 +7,31 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@warmaster/ui';
-import { OWNERS, type OwnerId } from '@/entities/owner';
+
 import type { HexRecord } from '@/entities/hex';
+import type { PlayerRecord } from '@/entities/campaign';
+import { getFaction, getFactionName } from '@/entities/factions';
 import { assignHexOwner } from '../api/assign-hex-owner';
 
 type Props = {
   hex: HexRecord | null;
+  players: PlayerRecord[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAssigned: (hexId: string, ownerId: OwnerId | null) => void;
+  onAssigned: (hexId: string, playerId: string | null) => void;
 };
 
-export function AssignOwnerDrawer({ hex, open, onOpenChange, onAssigned }: Props) {
+export function AssignOwnerDrawer({ hex, players, open, onOpenChange, onAssigned }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  function assign(ownerId: OwnerId | null) {
+  function assign(playerId: string | null) {
     if (!hex) return;
     setError(null);
     startTransition(async () => {
-      const result = await assignHexOwner({ hexId: hex.id, ownerId });
+      const result = await assignHexOwner({ hexId: hex.id, playerId });
       if (result.ok) {
-        onAssigned(hex.id, ownerId);
+        onAssigned(hex.id, playerId);
         onOpenChange(false);
       } else {
         setError(result.error);
@@ -45,9 +48,9 @@ export function AssignOwnerDrawer({ hex, open, onOpenChange, onAssigned }: Props
         </DrawerHeader>
 
         <div className="flex flex-col gap-2 p-4">
-          {OWNERS.map((o) => (
-            <Button key={o.id} disabled={pending} onClick={() => assign(o.id)}>
-              {o.name}
+          {players.map((player) => (
+            <Button key={player.id} disabled={pending} onClick={() => assign(player.id)}>
+              {getFactionName(player.factionId)} ({player.name})
             </Button>
           ))}
           <Button variant="outline" disabled={pending} onClick={() => assign(null)}>

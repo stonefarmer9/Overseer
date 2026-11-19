@@ -8,3 +8,5 @@ export {
   type FactionGroup,
   type FactionId,
 } from './model/factions';
+
+export { getFactionName } from './getFactionName';

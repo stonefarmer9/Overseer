@@ -1,4 +1,11 @@
 @import '@warmaster/ui/styles.css';
+@source "../";
+
+@layer base {
+  body {
+    @apply bg-background text-foreground;
+  }
+}
 
 :root {
   color-scheme: light dark;

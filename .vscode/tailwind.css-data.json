@@ -1,0 +1,25 @@
+{
+  "version": 1.1,
+  "atDirectives": [
+    {
+      "name": "@apply",
+      "description": "Inline the utility classes of another rule."
+    },
+    {
+      "name": "@source",
+      "description": "Add a path for Tailwind to scan for class names."
+    },
+    {
+      "name": "@theme",
+      "description": "Define design tokens for Tailwind."
+    },
+    {
+      "name": "@custom-variant",
+      "description": "Define a custom variant for Tailwind."
+    },
+    {
+      "name": "@utility",
+      "description": "Define a custom utility for Tailwind."
+    }
+  ]
+}

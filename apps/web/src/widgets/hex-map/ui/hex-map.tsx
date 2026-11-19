@@ -2,15 +2,17 @@
 
 import { useState } from 'react';
 import { HexCell, type HexRecord } from '@/entities/hex';
-import { getOwner } from '@/entities/owner';
+import type { PlayerRecord } from '@/entities/campaign';
+import { getFaction, getFactionName, parseFactionId } from '@/entities/factions';
+
 import { AssignOwnerDrawer } from '@/features/assign-hex-owner';
 import { hexToPixel, hexCorners } from '@/shared/lib/hex-grid';
 
 const SIZE = 30;
 
-type Props = { hexes: HexRecord[] };
+type Props = { hexes: HexRecord[]; players: PlayerRecord[] };
 
-export function HexMap({ hexes: initial }: Props) {
+export function HexMap({ hexes: initial, players }: Props) {
   const [hexes, setHexes] = useState(initial);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -32,26 +34,40 @@ export function HexMap({ hexes: initial }: Props) {
     <>
       <div className="h-full w-full p-4">
         <svg viewBox={viewBox} className="h-full w-full">
-          {hexes.map((hex) => (
-            <HexCell
-              key={hex.id}
-              hex={hex}
-              owner={hex.ownerId ? getOwner(hex.ownerId) : undefined}
-              onSelect={setSelectedId}
-            />
-          ))}
+          {hexes.map((hex) => {
+            const colours = coloursFor(hex, players);
+            return (
+              <HexCell
+                key={hex.id}
+                hex={hex}
+                fill={colours?.primary}
+                stroke={colours?.secondary}
+                strokeWidth={colours?.secondary ? 3 : undefined}
+                onSelect={setSelectedId}
+              />
+            );
+          })}
         </svg>
       </div>
       <AssignOwnerDrawer
         hex={selected}
+        players={players}
         open={selected !== null}
         onOpenChange={(open) => !open && setSelectedId(null)}
-        onAssigned={(hexId, ownerId) =>
-          setHexes((prev) => prev.map((hex) => (hex.id === hexId ? { ...hex, ownerId } : hex)))
+        onAssigned={(hexId, playerId) =>
+          setHexes((prev) =>
+            prev.map((hex) => (hex.id === hexId ? { ...hex, ownerId: playerId } : hex))
+          )
         }
       />
     </>
   );
+}
+
+function coloursFor(hex: HexRecord, players: PlayerRecord[]) {
+  const player = players.find((candidate) => candidate.id === hex.ownerId);
+  const factionId = parseFactionId(player?.factionId);
+  return factionId ? getFaction(factionId).colours : undefined;
 }
 
 function computeViewBox(hexes: HexRecord[], size: number): string {

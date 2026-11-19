@@ -4,6 +4,14 @@ import '@testing-library/jest-dom';
 Element.prototype.setPointerCapture = () => {};
 Element.prototype.releasePointerCapture = () => {};
 Element.prototype.hasPointerCapture = () => false;
+Element.prototype.scrollIntoView = () => {};
+
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+window.ResizeObserver = ResizeObserverStub;
 
 const originalGetComputedStyle = window.getComputedStyle;
 window.getComputedStyle = (element: Element, pseudoElt?: string | null) => {
