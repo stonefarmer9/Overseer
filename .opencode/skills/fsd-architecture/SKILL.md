@@ -7,7 +7,7 @@ description: Review completed frontend changes for Feature-Sliced Design complia
 
 ## Purpose
 
-Run this skill after completing frontend coding work in the Warmaster repository.
+Run this skill after completing frontend coding work in the Overseer repository.
 
 The goal is to verify that the completed changes follow the project's Feature-Sliced Design architecture, including:
 
@@ -25,7 +25,7 @@ This skill is a review step. It must not silently restructure files or change ar
 
 ## Project Context
 
-Warmaster is a TypeScript, React, and Next.js application using:
+Overseer is a TypeScript, React, and Next.js application using:
 
 - Next.js App Router.
 - TypeScript.

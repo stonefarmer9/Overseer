@@ -54,7 +54,7 @@ The monorepo should follow Feature-Sliced Design principles. A typical layout:
           lib/
           ui/
   packages/
-    ui/                 # Shared UI components (ShadCN-based, imported as @warmaster/ui)
+    ui/                 # Shared UI components (ShadCN-based, imported as @overseer/ui)
     config/             # Shared configs (TS, ESLint, Prettier, Tailwind, etc.)
   AGENTS.md
   package.json

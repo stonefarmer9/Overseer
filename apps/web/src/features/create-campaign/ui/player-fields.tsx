@@ -8,7 +8,7 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from '@warmaster/ui';
+} from '@overseer/ui';
 import { FACTION_GROUPS } from '@/entities/factions';
 
 export type PlayerRole = 'attacker' | 'defender';

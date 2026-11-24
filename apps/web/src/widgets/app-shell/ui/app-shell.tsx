@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { SidebarInset, SidebarProvider } from '@warmaster/ui';
+import { SidebarInset, SidebarProvider } from '@overseer/ui';
 import type { CampaignSummary } from '@/entities/campaign';
 import { AppSidebar } from './app-sidebar';
 import { TopBar } from './top-bar';

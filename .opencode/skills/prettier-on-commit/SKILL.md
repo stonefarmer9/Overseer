@@ -129,7 +129,7 @@ Do not:
 
 ## Monorepo Rules
 
-Warmaster is a monorepo.
+Overseer is a monorepo.
 
 The hook should be installed at the repository root unless the repository has a documented package-specific Git workflow.
 

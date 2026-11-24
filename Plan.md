@@ -415,7 +415,7 @@ import {
   DrawerDescription,
   DrawerHeader,
   DrawerTitle,
-} from '@warmaster/ui';
+} from '@overseer/ui';
 import { OWNERS, type OwnerId } from '@/entities/owner';
 import type { HexRecord } from '@/entities/hex';
 import { assignHexOwner } from '../api/assign-hex-owner';

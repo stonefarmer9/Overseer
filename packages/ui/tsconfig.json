@@ -12,7 +12,7 @@
     "jsx": "react-jsx",
     "skipLibCheck": true,
     "paths": {
-      "@warmaster/ui/*": ["./src/*"]
+      "@overseer/ui/*": ["./src/*"]
     }
   },
   "include": ["src"]

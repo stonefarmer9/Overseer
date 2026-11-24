@@ -14,7 +14,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from '@warmaster/ui';
+} from '@overseer/ui';
 import type { CampaignSummary } from '@/entities/campaign';
 
 const PLACEHOLDER_SECTIONS = [

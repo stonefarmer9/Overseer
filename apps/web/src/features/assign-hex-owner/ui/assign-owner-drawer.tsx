@@ -6,7 +6,7 @@ import {
   DrawerDescription,
   DrawerHeader,
   DrawerTitle,
-} from '@warmaster/ui';
+} from '@overseer/ui';
 
 import type { HexRecord } from '@/entities/hex';
 import type { PlayerRecord } from '@/entities/campaign';

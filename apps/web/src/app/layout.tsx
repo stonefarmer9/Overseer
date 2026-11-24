@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Warmaster',
-  description: 'Warmaster web application',
+  title: 'Overseer',
+  description: 'Overseer web application',
 };
 
 export default async function RootLayout({ children }: LayoutProps<'/'>) {

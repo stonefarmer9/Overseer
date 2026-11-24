@@ -800,7 +800,7 @@ On success, redirect to `/campaigns/[campaignId]`. That route is built in Phase 
 - The options come from `CAMPAIGN_SIZES` and `FACTION_GROUPS`, so the UI can't offer anything the server rejects.
 - The attacker and defender fields are the same component with a different role. `PlayerFields` lives in its own file so each file has one component and the role is a typed union, not a free-text title.
 - `PlayerFields` is internal to this feature, so it isn't exported from `index.ts`. The form imports it directly.
-- Uses the ShadCN `Select`, `Input`, `Label`, and `Button` from `@warmaster/ui`. The `Select` is built on Radix, which needs a few browser APIs that jsdom doesn't have. Step 0 adds them to the test setup.
+- Uses the ShadCN `Select`, `Input`, `Label`, and `Button` from `@overseer/ui`. The `Select` is built on Radix, which needs a few browser APIs that jsdom doesn't have. Step 0 adds them to the test setup.
 
 ### Files
 
@@ -872,7 +872,7 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from '@warmaster/ui';
+} from '@overseer/ui';
 import { FACTION_GROUPS } from '@/entities/factions';
 
 export type PlayerRole = 'attacker' | 'defender';
@@ -1021,7 +1021,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@warmaster/ui';
+} from '@overseer/ui';
 import { CAMPAIGN_SIZES, DEFAULT_CAMPAIGN_SIZE, type CampaignSize } from '@/entities/campaign';
 import { createCampaign } from '../api/create-campaign';
 import { PlayerFields, type PlayerRole, type PlayerState } from './player-fields';
@@ -1291,8 +1291,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Warmaster',
-  description: 'Warmaster web application',
+  title: 'Overseer',
+  description: 'Overseer web application',
 };
 
 export default async function RootLayout({ children }: LayoutProps<'/'>) {
@@ -1315,7 +1315,7 @@ Replace the whole file with:
 
 ```tsx
 import type { ReactNode } from 'react';
-import { SidebarInset, SidebarProvider } from '@warmaster/ui';
+import { SidebarInset, SidebarProvider } from '@overseer/ui';
 import type { CampaignSummary } from '@/entities/campaign';
 import { AppSidebar } from './app-sidebar';
 import { TopBar } from './top-bar';
@@ -1356,7 +1356,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from '@warmaster/ui';
+} from '@overseer/ui';
 import type { CampaignSummary } from '@/entities/campaign';
 
 const PLACEHOLDER_SECTIONS = [
@@ -1713,7 +1713,7 @@ import {
   DrawerDescription,
   DrawerHeader,
   DrawerTitle,
-} from '@warmaster/ui';
+} from '@overseer/ui';
 import type { HexRecord } from '@/entities/hex';
 import type { PlayerRecord } from '@/entities/campaign';
 import { getFaction, parseFactionId } from '@/entities/factions';

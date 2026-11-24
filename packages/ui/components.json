@@ -11,11 +11,11 @@
     "prefix": ""
   },
   "aliases": {
-    "components": "@warmaster/ui/components",
-    "utils": "@warmaster/ui/lib/utils",
-    "ui": "@warmaster/ui/components/ui",
-    "lib": "@warmaster/ui/lib",
-    "hooks": "@warmaster/ui/hooks"
+    "components": "@overseer/ui/components",
+    "utils": "@overseer/ui/lib/utils",
+    "ui": "@overseer/ui/components/ui",
+    "lib": "@overseer/ui/lib",
+    "hooks": "@overseer/ui/hooks"
   },
   "iconLibrary": "lucide"
 }
