@@ -10,7 +10,7 @@ import {
 
 import type { HexRecord } from '@/entities/hex';
 import type { PlayerRecord } from '@/entities/campaign';
-import { getFaction, getFactionName } from '@/entities/factions';
+import { getFactionName } from '@/entities/factions';
 import { assignHexOwner } from '../api/assign-hex-owner';
 
 type Props = {

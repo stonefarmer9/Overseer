@@ -10,7 +10,6 @@ import {
   SelectValue,
 } from '@warmaster/ui';
 import { FACTION_GROUPS } from '@/entities/factions';
-import { Player } from '@prisma/client';
 
 export type PlayerRole = 'attacker' | 'defender';
 

@@ -1,7 +1,5 @@
 import { CAMPAIGN_SIZES, type CampaignSize } from '@/entities/campaign';
 import { parseFactionId, type FactionId } from '@/entities/factions';
-import { Player } from '@prisma/client';
-import { parse } from 'path';
 
 type PlayerInput = { name?: unknown; factionId?: unknown };
 

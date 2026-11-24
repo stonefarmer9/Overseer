@@ -10,7 +10,7 @@ export default async function CampaignsPage() {
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Campaigns</h1>
-        <Link href="/campaigns/new" className="underling">
+        <Link href="/campaigns/new" className="underline">
           New Campaign
         </Link>
       </div>
@@ -19,9 +19,11 @@ export default async function CampaignsPage() {
       ) : (
         <ul className="flex flex-col gap-2">
           {campaigns.map((campaign) => (
-            <Link href={`/campaigns/${campaign.id}`} className="underline">
-              {campaign.name}
-            </Link>
+            <li key={campaign.id}>
+              <Link href={`/campaigns/${campaign.id}`} className="underline">
+                {campaign.name}
+              </Link>
+            </li>
           ))}
         </ul>
       )}

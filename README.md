@@ -1,39 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Overseer
 
-## Getting Started
+Overseer is a web app for running Warhammer 40k campaigns. Create a campaign, pick a board size, name the attacker and defender with a faction each, then assign hexes on the map. Each hex is drawn in its owner's faction colours and can be reassigned after every battle.
 
-First, run the development server:
+## Setup
+
+The SQLite database is not stored in git, so create it after cloning:
 
 ```bash
+npm install
+cp apps/web/.env.example apps/web/.env
+cd apps/web
+npx prisma migrate deploy   # creates dev.db and applies the migrations
+npx prisma generate         # generates the Prisma client
+cd ../..
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`apps/web/.env` holds `DATABASE_URL="file:./dev.db"`, a path relative to `apps/web`. Use `prisma migrate deploy` to apply existing migrations. Only use `prisma migrate dev` when you are changing `prisma/schema.prisma`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+To start again with an empty database, delete `apps/web/dev.db` and run `npx prisma migrate deploy` again.
 
-## Learn More
+## Commands
 
-To learn more about Next.js, take a look at the following resources:
+Run these from the repo root.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Command             | What it does                                                       |
+| ------------------- | ------------------------------------------------------------------ |
+| `npm run dev`       | Start the dev server                                               |
+| `npm run build`     | Production build                                                   |
+| `npm run start`     | Serve the production build                                         |
+| `npm run lint`      | ESLint. Warnings count as failures                                 |
+| `npm run typecheck` | TypeScript check with no output files                              |
+| `npm run test`      | Jest and React Testing Library                                     |
+| `npm run verify`    | Typecheck, lint, test and build. Must pass before work is finished |
+| `npm run format`    | Prettier on the whole repo                                         |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Git commits run `lint-staged` through Husky, which formats staged files with Prettier.
 
-## Deploy on Vercel
+## Stack and structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Next.js (App Router), React, TypeScript, ShadCN UI (`packages/ui`)
+- Prisma with SQLite
+- Jest and React Testing Library
+- Feature-Sliced Design under `apps/web/src`: `app`, `widgets`, `features`, `entities`, `shared`. Slices expose a public `index.ts`, and imports only go downward. See `AGENTS.md` for the full rules.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Assumptions
+
+- Players are names only. There are no accounts yet, so anyone with a campaign link can change its board. The campaign page says so.
+- The sidebar lists every campaign. Filtering by membership needs user accounts.
+- Hexes can be reassigned at any time. There is no lock after a campaign starts.
+
+## Agent tooling
+
+`.opencode/` configures AI agents for this repo: `peon` (mechanical edits), `tester` (tests), `reviewer` (read-only review), a `/ship` command (verify, review, commit) and skills for FSD review and Prettier-on-commit. Agents follow `AGENTS.md`, never bypass git hooks, and do not finish a task until `npm run verify` passes.
 
 ## Screenshots - New Campaign flow
 

@@ -27,6 +27,9 @@ export default async function CampaignPage({ params }: PageProps) {
             </li>
           ))}
         </ul>
+        <p className="text-sm text-muted-foreground">
+          Players are names only for now. Anyone with this link can change the board.
+        </p>
       </header>
       <div className="h-[70vh] w-full">
         <HexMap hexes={campaign.hexes} players={campaign.players} />

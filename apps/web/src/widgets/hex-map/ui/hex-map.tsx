@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { HexCell, type HexRecord } from '@/entities/hex';
 import type { PlayerRecord } from '@/entities/campaign';
-import { getFaction, getFactionName, parseFactionId } from '@/entities/factions';
+import { getFaction, parseFactionId } from '@/entities/factions';
 
 import { AssignOwnerDrawer } from '@/features/assign-hex-owner';
 import { hexToPixel, hexCorners } from '@/shared/lib/hex-grid';

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createCampaign } from '../api/create-campaign';
 import { CreateCampaignForm } from './create-campaign-form';
@@ -20,20 +20,6 @@ beforeEach(() => {
   mockedCreate.mockReset();
   mockedCreate.mockResolvedValue({ ok: true, campaignId: 'campaign-1' });
 });
-
-async function choose(triggerLabel: string, optionName: string) {
-  const trigger = screen.getByLabelText(triggerLabel);
-  await userEvent.click(trigger);
-
-  const option = await screen.findByRole('option', { name: optionName });
-  await waitFor(() =>
-    expect(screen.getByRole('listbox')).toContainElement(document.activeElement as HTMLElement)
-  );
-  await userEvent.click(option);
-
-  await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
-  await waitFor(() => expect(trigger).toHaveFocus());
-}
 
 it('shows an error when the campaign name is empty', async () => {
   mockedCreate.mockResolvedValue({ ok: false, error: 'Campaign name is required' });

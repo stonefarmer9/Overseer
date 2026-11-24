@@ -1,6 +1,6 @@
 'use client';
 
-import { SyntheticEvent, useState, useTransition, type FormEvent } from 'react';
+import { SyntheticEvent, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Button,
@@ -8,9 +8,7 @@ import {
   Label,
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@warmaster/ui';
@@ -48,7 +46,11 @@ export function CreateCampaignForm() {
     setError(null);
     startTransition(async () => {
       const result = await createCampaign(values);
-      result.ok ? router.push(`/campaigns/${result.campaignId}`) : setError(result.error);
+      if (result.ok) {
+        router.push(`/campaigns/${result.campaignId}`);
+      } else {
+        setError(result.error);
+      }
     });
   }
 
