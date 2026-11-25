@@ -1,5 +1,5 @@
 import { UserCircle } from 'lucide-react';
-import { Button, SidebarTrigger } from '@overseer/ui';
+import { Button, SidebarTrigger } from '@/shared/ui';
 
 export function TopBar() {
   return (

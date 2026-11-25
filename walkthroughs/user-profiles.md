@@ -4,7 +4,7 @@ Goal: people sign in with Google, choose a display name, and only see campaigns 
 
 This is a code-along. Each step says **what** we are doing, **why**, and gives the code. Type it yourself rather than pasting, so the reasons sink in.
 
-Every file heading shows the full path from the repository root, for example `apps/web/src/entities/campaign/model/roles.ts`. Create files at exactly the path shown.
+Every file heading shows the full path from the repository root, for example `src/entities/campaign/model/roles.ts`. Create files at exactly the path shown.
 
 Commands run from the repo root unless a step says otherwise.
 
@@ -66,7 +66,7 @@ A `PlayerRole` type, the list of roles, their labels, and two helpers, in `entit
 
 We only create the module and its test now. The places that use it (the form, the validation, the queries) get rewritten in later phases, and we swap them over there.
 
-### `apps/web/src/entities/campaign/model/roles.ts`
+### `src/entities/campaign/model/roles.ts`
 
 ```ts
 export const PLAYER_ROLES = ['attacker', 'defender'] as const;
@@ -93,7 +93,7 @@ export function opposingRole(role: PlayerRole): PlayerRole {
 
 **Why `Record<PlayerRole, string>` for labels:** if a third role is ever added, TypeScript errors until it has a label.
 
-### `apps/web/src/entities/campaign/model/roles.test.ts`
+### `src/entities/campaign/model/roles.test.ts`
 
 ```ts
 import { opposingRole, parsePlayerRole, PLAYER_ROLES, ROLE_LABELS } from './roles';
@@ -126,7 +126,7 @@ describe('player roles', () => {
 });
 ```
 
-### `apps/web/src/entities/campaign/index.ts`
+### `src/entities/campaign/index.ts`
 
 Add one export block. The whole file becomes:
 
@@ -158,10 +158,10 @@ export type {
 **Why `@beta`:** on npm, the `latest` tag of `next-auth` is still version 4, which has a different API. Version 5 (Auth.js) is published under the `beta` tag. It lists Next 16 as a supported peer.
 
 ```bash
-npm install next-auth@beta --workspace @overseer/web --save-exact
+npm install next-auth@beta --save-exact
 ```
 
-`--save-exact` pins the version, so a new beta cannot change behaviour under you. Check `apps/web/package.json` now contains `"next-auth": "5.0.0-beta.xx"`.
+`--save-exact` pins the version, so a new beta cannot change behaviour under you. Check `package.json` now contains `"next-auth": "5.0.0-beta.xx"`.
 
 ### 2.2 Create a Google OAuth client
 
@@ -193,7 +193,7 @@ Generate a secret:
 openssl rand -base64 33
 ```
 
-Add to `apps/web/.env` (this file is git-ignored):
+Add to `.env` (this file is git-ignored):
 
 ```bash
 AUTH_SECRET="paste-the-generated-secret"
@@ -203,7 +203,7 @@ AUTH_GOOGLE_SECRET="paste-the-client-secret"
 
 `AUTH_SECRET` is what signs and encrypts the session cookie. Anyone who knows it can forge a login, so never commit it.
 
-Then update `apps/web/.env.example`, which **is** committed, with the names only and no values:
+Then update `.env.example`, which **is** committed, with the names only and no values:
 
 ```bash
 DATABASE_URL="file:./dev.db"
@@ -231,7 +231,7 @@ Add a `User` model and link it to `Campaign` and `Player`. Then wipe the databas
 - `User.googleSub` is Google's permanent id for the person. The email can change, the `sub` does not, so we identify people by `sub`.
 - `displayName` is nullable. A user exists from first sign-in, but has no name until they finish `/welcome`.
 
-### `apps/web/prisma/schema.prisma`
+### `prisma/schema.prisma`
 
 Replace the file with:
 
@@ -303,19 +303,17 @@ model Hex {
 Stop `npm run dev` first. Then:
 
 ```bash
-cd apps/web
 rm dev.db
 rm -rf prisma/migrations
 npx prisma migrate dev --name init
 npx prisma generate
-cd ../..
 ```
 
 **Why delete the migrations too:** the old migrations describe a schema with no users. Replaying them and adding a fourth migration would give a history that includes data shapes we no longer care about. One `init` is cleaner for a project with no real data.
 
 **Why `generate` separately:** in Prisma 7, `migrate dev` no longer regenerates the client for you.
 
-**Check:** `ls apps/web/prisma/migrations` shows one folder ending in `_init` plus `migration_lock.toml`, and `apps/web/dev.db` exists again.
+**Check:** `ls prisma/migrations` shows one folder ending in `_init` plus `migration_lock.toml`, and `dev.db` exists again.
 
 ### Expect red from here until Phase 8
 
@@ -325,7 +323,7 @@ cd ../..
 
 ## 4. Phase 4: The auth core
 
-### 4.1 The config: `apps/web/src/shared/api/auth.ts`
+### 4.1 The config: `src/shared/api/auth.ts`
 
 **What:** one file that creates the Auth.js instance and exports `handlers`, `auth`, `signIn` and `signOut`.
 
@@ -376,7 +374,7 @@ Walking through it:
 - **`authorized` callback:** this one only runs when `auth` is used as the proxy (Phase 11). Returning `false` redirects to the sign-in page. A signed-in person who opens `/sign-in` is sent home.
 - **`declare module 'next-auth'`:** teaches TypeScript that `session.user.id` exists.
 
-### 4.2 The route handler: `apps/web/src/app/api/auth/[...nextauth]/route.ts`
+### 4.2 The route handler: `src/app/api/auth/[...nextauth]/route.ts`
 
 **Why:** Google sends the browser back to `/api/auth/callback/google`. This catch-all route is where Auth.js receives that and the other auth requests (sign-in, sign-out, session).
 
@@ -408,7 +406,7 @@ The user type, two small pure helpers (email and display-name validation), the d
 
 The folder follows the same pattern as `entities/campaign`: `index.ts` is safe for the browser, `server.ts` is server-only.
 
-### 5.1 `apps/web/src/entities/user/model/types.ts`
+### 5.1 `src/entities/user/model/types.ts`
 
 ```ts
 export type UserRecord = {
@@ -420,7 +418,7 @@ export type UserRecord = {
 
 **Why not the Prisma type:** same reason as for hexes. The UI should not depend on Prisma, and this is exactly the shape that crosses to components.
 
-### 5.2 `apps/web/src/entities/user/lib/email.ts`
+### 5.2 `src/entities/user/lib/email.ts`
 
 ```ts
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -436,7 +434,7 @@ export function normaliseEmail(input: unknown): string | null {
 
 **Why such a loose pattern:** the only real test of an email is whether that person can sign in with it. This just catches typos like a missing `@`.
 
-### 5.3 `apps/web/src/entities/user/lib/email.test.ts`
+### 5.3 `src/entities/user/lib/email.test.ts`
 
 ```ts
 import { normaliseEmail } from './email';
@@ -463,7 +461,7 @@ describe('normaliseEmail', () => {
 });
 ```
 
-### 5.4 `apps/web/src/entities/user/model/display-name.ts`
+### 5.4 `src/entities/user/model/display-name.ts`
 
 ```ts
 export const DISPLAY_NAME_MIN = 2;
@@ -488,7 +486,7 @@ export function validateDisplayName(input: unknown): DisplayNameResult {
 
 **Why this is a pure function:** the form can use it for instant feedback later, and the server action uses it as the real check. Same pattern as `validateCampaign`.
 
-### 5.5 `apps/web/src/entities/user/model/display-name.test.ts`
+### 5.5 `src/entities/user/model/display-name.test.ts`
 
 ```ts
 import { validateDisplayName } from './display-name';
@@ -525,7 +523,7 @@ describe('validateDisplayName', () => {
 });
 ```
 
-### 5.6 `apps/web/src/entities/user/api/user-queries.ts`
+### 5.6 `src/entities/user/api/user-queries.ts`
 
 ```ts
 import 'server-only';
@@ -592,7 +590,7 @@ Walking through `findOrCreateUser`:
 
 **Why we only claim at creation time:** invites for someone who already has an account are linked straight away when the campaign is created (Phase 8). So the only time a pending invite can match is when that person first appears.
 
-### 5.7 `apps/web/src/entities/user/api/user-queries.test.ts`
+### 5.7 `src/entities/user/api/user-queries.test.ts`
 
 ```ts
 import { prisma } from '@/shared/api/db';
@@ -699,7 +697,7 @@ describe('setDisplayName', () => {
 
 **Why the `mockTx` name:** Jest only lets a `jest.mock` factory use outer variables whose names start with `mock`. The `$transaction` stub calls the callback with our fake transaction client, so we can check what happened inside it.
 
-### 5.8 `apps/web/src/entities/user/api/session.ts`
+### 5.8 `src/entities/user/api/session.ts`
 
 ```ts
 import 'server-only';
@@ -745,7 +743,7 @@ Three helpers, three levels:
 
 **Why this is the real security boundary and the proxy (Phase 11) is not:** the Next.js docs say proxy checks are optimistic and should not be the only line of defence. Layouts are not reliable either, because they do not re-render on every client navigation. So **every page and every server action calls `requireProfile()` itself.**
 
-### 5.9 `apps/web/src/entities/user/api/session.test.ts`
+### 5.9 `src/entities/user/api/session.test.ts`
 
 ```ts
 import { redirect } from 'next/navigation';
@@ -852,7 +850,7 @@ describe('requireProfile', () => {
 
 ### 5.10 The public API
 
-`apps/web/src/entities/user/index.ts` (safe for the browser, no server code):
+`src/entities/user/index.ts` (safe for the browser, no server code):
 
 ```ts
 export { normaliseEmail } from './lib/email';
@@ -860,7 +858,7 @@ export { DISPLAY_NAME_MAX, DISPLAY_NAME_MIN, validateDisplayName } from './model
 export type { UserRecord } from './model/types';
 ```
 
-`apps/web/src/entities/user/server.ts` (server only):
+`src/entities/user/server.ts` (server only):
 
 ```ts
 export { findOrCreateUser, findUserByEmail, setDisplayName } from './api/user-queries';
@@ -881,7 +879,7 @@ export { getCurrentUser, requireProfile, requireUser, type ProfiledUser } from '
 
 **Why a feature:** signing in and out are things a user does, so they get their own slice.
 
-#### `apps/web/src/features/auth/api/auth-actions.ts`
+#### `src/features/auth/api/auth-actions.ts`
 
 ```ts
 'use server';
@@ -901,10 +899,10 @@ export async function signOutUser(): Promise<void> {
 
 **Why `redirectTo: '/'`:** after Google sends the person back, Auth.js sends them here. A user with no display name will be bounced on to `/welcome` by `requireProfile()`.
 
-#### `apps/web/src/features/auth/ui/sign-in-button.tsx`
+#### `src/features/auth/ui/sign-in-button.tsx`
 
 ```tsx
-import { Button } from '@overseer/ui';
+import { Button } from '@/shared/ui';
 import { signInWithGoogle } from '../api/auth-actions';
 
 export function SignInButton() {
@@ -916,10 +914,10 @@ export function SignInButton() {
 }
 ```
 
-#### `apps/web/src/features/auth/ui/sign-out-button.tsx`
+#### `src/features/auth/ui/sign-out-button.tsx`
 
 ```tsx
-import { Button } from '@overseer/ui';
+import { Button } from '@/shared/ui';
 import { signOutUser } from '../api/auth-actions';
 
 export function SignOutButton() {
@@ -935,7 +933,7 @@ export function SignOutButton() {
 
 **Why no `'use client'`:** a `<form action={serverAction}>` works in a Server Component. No browser JavaScript means fewer client boundaries.
 
-#### `apps/web/src/features/auth/index.ts`
+#### `src/features/auth/index.ts`
 
 ```ts
 export { SignInButton } from './ui/sign-in-button';
@@ -944,7 +942,7 @@ export { SignOutButton } from './ui/sign-out-button';
 
 Note that `signInWithGoogle` and `signOutUser` are **not** exported. Nothing outside the slice needs them.
 
-#### `apps/web/src/features/auth/ui/auth-buttons.test.tsx`
+#### `src/features/auth/ui/auth-buttons.test.tsx`
 
 ```tsx
 import { render, screen } from '@testing-library/react';
@@ -977,7 +975,7 @@ it('offers a sign-out button', () => {
 
 **Why one form for two pages:** choosing a name at sign-up and changing it later are the same action. The page passes in where to go afterwards.
 
-#### `apps/web/src/features/edit-profile/api/save-display-name.ts`
+#### `src/features/edit-profile/api/save-display-name.ts`
 
 ```ts
 'use server';
@@ -1007,14 +1005,14 @@ export async function saveDisplayName(input: SaveDisplayNameInput): Promise<Save
 
 **Why `revalidatePath('/', 'layout')`:** the top bar in the layout shows the display name. This tells Next.js to rebuild it.
 
-#### `apps/web/src/features/edit-profile/ui/display-name-form.tsx`
+#### `src/features/edit-profile/ui/display-name-form.tsx`
 
 ```tsx
 'use client';
 
 import { SyntheticEvent, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Label } from '@overseer/ui';
+import { Button, Input, Label } from '@/shared/ui';
 import { saveDisplayName } from '../api/save-display-name';
 
 type DisplayNameFormProps = {
@@ -1065,13 +1063,13 @@ export function DisplayNameForm({ initialValue, redirectTo, submitLabel }: Displ
 
 This is the same shape as `CreateCampaignForm`: local state, `useTransition` for the pending flag, an `alert` for errors.
 
-#### `apps/web/src/features/edit-profile/index.ts`
+#### `src/features/edit-profile/index.ts`
 
 ```ts
 export { DisplayNameForm } from './ui/display-name-form';
 ```
 
-#### `apps/web/src/features/edit-profile/ui/display-name-form.test.tsx`
+#### `src/features/edit-profile/ui/display-name-form.test.tsx`
 
 ```tsx
 import { render, screen } from '@testing-library/react';
@@ -1134,12 +1132,12 @@ it('shows the error and stays put when saving fails', async () => {
 
 Each page calls `connection()` first. That is what the existing pages do: it marks the page as rendered per request, so nothing is cached between users.
 
-#### `apps/web/src/app/sign-in/page.tsx`
+#### `src/app/sign-in/page.tsx`
 
 ```tsx
 import { redirect } from 'next/navigation';
 import { connection } from 'next/server';
-import { Card, CardContent, CardHeader, CardTitle } from '@overseer/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui';
 import { getCurrentUser } from '@/entities/user/server';
 import { SignInButton } from '@/features/auth';
 
@@ -1175,7 +1173,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
 
 **Why any `error` shows one message:** Auth.js passes codes like `AccessDenied` (our `signIn` callback said no) or `Configuration`. None are useful to show a player, and the details go to the server log.
 
-#### `apps/web/src/app/welcome/page.tsx`
+#### `src/app/welcome/page.tsx`
 
 ```tsx
 import { redirect } from 'next/navigation';
@@ -1202,7 +1200,7 @@ export default async function WelcomePage() {
 
 **Why `requireUser` and the early redirect:** a user who already has a name should not see the welcome screen again.
 
-#### `apps/web/src/app/profile/page.tsx`
+#### `src/app/profile/page.tsx`
 
 ```tsx
 import { connection } from 'next/server';
@@ -1227,11 +1225,11 @@ export default async function ProfilePage() {
 
 Every page behind the sign-in needs to call `requireProfile()` so an incomplete profile is sent to `/welcome`.
 
-#### `apps/web/src/app/page.tsx`
+#### `src/app/page.tsx`
 
 ```tsx
 import { connection } from 'next/server';
-import { Card, CardContent, CardHeader, CardTitle } from '@overseer/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui';
 import { requireProfile } from '@/entities/user/server';
 
 export default async function HomePage() {
@@ -1253,7 +1251,7 @@ export default async function HomePage() {
 }
 ```
 
-#### `apps/web/src/app/campaigns/new/page.tsx`
+#### `src/app/campaigns/new/page.tsx`
 
 ```tsx
 import { connection } from 'next/server';
@@ -1282,7 +1280,7 @@ The campaigns list and the campaign page change in Phases 7 and 9, because they 
 
 This is decision U7 (private campaigns). The filter is in the query, not in the page, so there is no code path that forgets it. A campaign you are not in comes back as `null`, and the page shows a 404, the same as a campaign that does not exist, so its existence is not revealed.
 
-### `apps/web/src/entities/campaign/model/types.ts`
+### `src/entities/campaign/model/types.ts`
 
 ```ts
 import type { PlayerRole } from './roles';
@@ -1317,7 +1315,7 @@ export type CampaignDetail = {
 
 **Why `joined`:** `false` means the seat is an invite nobody has accepted yet. The page can show that. We expose a boolean instead of the user id or email, so the UI never sees them.
 
-### `apps/web/src/entities/campaign/api/campaign-queries.ts`
+### `src/entities/campaign/api/campaign-queries.ts`
 
 ```ts
 import 'server-only';
@@ -1376,7 +1374,7 @@ Walking through it:
 - **`toPlayerRole`:** the database stores `role` as text. This is the one boundary where we convert it. If the database ever holds something else, we fail loudly instead of passing a bad value around.
 - **Destructuring `userId: playerUserId`:** it strips the raw user id off the player and replaces it with the `joined` boolean. The new name avoids clashing with the `userId` parameter.
 
-### `apps/web/src/entities/campaign/api/campaign-queries.test.ts`
+### `src/entities/campaign/api/campaign-queries.test.ts`
 
 Replace the whole file:
 
@@ -1483,7 +1481,7 @@ describe('getCampaign', () => {
 });
 ```
 
-### Fix one fixture: `apps/web/src/features/assign-hex-owner/ui/assign-owner-drawer.test.tsx`
+### Fix one fixture: `src/features/assign-hex-owner/ui/assign-owner-drawer.test.tsx`
 
 `PlayerRecord` has a new required field. Update the fixture at the top of the file:
 
@@ -1500,7 +1498,7 @@ const players: PlayerRecord[] = [
 ];
 ```
 
-### The campaigns list page: `apps/web/src/app/campaigns/page.tsx`
+### The campaigns list page: `src/app/campaigns/page.tsx`
 
 ```tsx
 import Link from 'next/link';
@@ -1553,7 +1551,7 @@ The form now asks "which side are you?" and for the **opponent's** name, email a
 
 Decisions U4 and U5. The server does not trust the form for who the creator is. It takes the user from the session.
 
-### 8.1 Validation: `apps/web/src/features/create-campaign/lib/validate-campaign.ts`
+### 8.1 Validation: `src/features/create-campaign/lib/validate-campaign.ts`
 
 Replace the whole file:
 
@@ -1628,7 +1626,7 @@ export function validateCampaign(input: CampaignFormInput): ValidationResult {
 
 **Why the validator does not check "not yourself":** it only sees the form. It does not know who you are. That check is in the action, which has the session.
 
-### `apps/web/src/features/create-campaign/lib/validate-campaign.test.ts`
+### `src/features/create-campaign/lib/validate-campaign.test.ts`
 
 Replace the whole file:
 
@@ -1707,7 +1705,7 @@ describe('A campaign is validated at creation', () => {
 });
 ```
 
-### 8.2 The action: `apps/web/src/features/create-campaign/api/create-campaign.ts`
+### 8.2 The action: `src/features/create-campaign/api/create-campaign.ts`
 
 Replace the whole file:
 
@@ -1780,7 +1778,7 @@ Walking through it:
    - **Why this keeps the friend list in mind (U11):** a future "pick a friend" feature will skip the lookup and set `userId` directly.
 5. **`revalidatePath('/', 'layout')`** refreshes the sidebar, as before.
 
-### `apps/web/src/features/create-campaign/api/create-campaign.test.ts`
+### `src/features/create-campaign/api/create-campaign.test.ts`
 
 Replace the whole file:
 
@@ -1918,7 +1916,7 @@ it('does not run at all for a signed-out visitor', async () => {
 });
 ```
 
-### 8.3 The fields: `apps/web/src/features/create-campaign/ui/player-fields.tsx`
+### 8.3 The fields: `src/features/create-campaign/ui/player-fields.tsx`
 
 Replace the whole file. This now uses the roles module (`ROLE_LABELS`, `PlayerRole`) instead of its own copies, which closes the `Notes.md` item.
 
@@ -1933,7 +1931,7 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from '@overseer/ui';
+} from '@/shared/ui';
 import { ROLE_LABELS, type PlayerRole } from '@/entities/campaign';
 import { FACTION_GROUPS } from '@/entities/factions';
 
@@ -2003,7 +2001,7 @@ export function PlayerFields({ role, value, onChange, isYou = false }: PlayerFie
 
 **Why `isYou` hides the name and email:** your name comes from your profile and you do not invite yourself. Showing those boxes would be asking for data we already have.
 
-### `apps/web/src/features/create-campaign/ui/player-fields.test.tsx`
+### `src/features/create-campaign/ui/player-fields.test.tsx`
 
 Replace the whole file:
 
@@ -2062,7 +2060,7 @@ it('groups factions under Imperium, Chaos, and Xenos', async () => {
 });
 ```
 
-### 8.4 The form: `apps/web/src/features/create-campaign/ui/create-campaign-form.tsx`
+### 8.4 The form: `src/features/create-campaign/ui/create-campaign-form.tsx`
 
 Replace the whole file:
 
@@ -2080,7 +2078,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@overseer/ui';
+} from '@/shared/ui';
 import {
   CAMPAIGN_SIZES,
   DEFAULT_CAMPAIGN_SIZE,
@@ -2234,7 +2232,7 @@ export function CreateCampaignForm() {
 
 **Why `createCampaign(values)` still works:** `FormState` has exactly the fields `CampaignFormInput` expects.
 
-### Add one test to `apps/web/src/features/create-campaign/ui/create-campaign-form.test.tsx`
+### Add one test to `src/features/create-campaign/ui/create-campaign-form.test.tsx`
 
 Keep the two existing tests. Add this one at the end:
 
@@ -2275,7 +2273,7 @@ Typecheck should still fail in three places that Phase 9 and Phase 10 fix: `assi
 
 ## 9. Phase 9: Only players can edit hexes, and the campaign page
 
-### 9.1 The action: `apps/web/src/features/assign-hex-owner/api/assign-hex-owner.ts`
+### 9.1 The action: `src/features/assign-hex-owner/api/assign-hex-owner.ts`
 
 Replace the whole file. The changes are the `requireProfile()` at the top and the membership check.
 
@@ -2339,7 +2337,7 @@ export async function assignHexOwner(input: AssignInput): Promise<AssignResult> 
 
 **Why no creator check:** decision U6, either player can edit.
 
-### `apps/web/src/features/assign-hex-owner/api/assign-hex-owner.test.ts`
+### `src/features/assign-hex-owner/api/assign-hex-owner.test.ts`
 
 Replace the whole file:
 
@@ -2469,7 +2467,7 @@ it('clears the owner without looking up a player when playerId is null', async (
 });
 ```
 
-### 9.2 The campaign page: `apps/web/src/app/campaigns/[campaignId]/page.tsx`
+### 9.2 The campaign page: `src/app/campaigns/[campaignId]/page.tsx`
 
 Replace the whole file:
 
@@ -2535,7 +2533,7 @@ The root layout loads the user, lists only their campaigns, and only draws the a
 - Signed-out visitors (on `/sign-in`) and brand-new users (on `/welcome`) should see a clean page, not a sidebar with nothing in it.
 - **The layout is not the security boundary.** Layouts do not re-run on every client navigation, so the pages and actions check the user themselves (Phases 5 to 9). The layout only decides what to **draw**.
 
-### `apps/web/src/app/layout.tsx`
+### `src/app/layout.tsx`
 
 ```tsx
 import type { Metadata } from 'next';
@@ -2583,11 +2581,11 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
 }
 ```
 
-### `apps/web/src/widgets/app-shell/ui/app-shell.tsx`
+### `src/widgets/app-shell/ui/app-shell.tsx`
 
 ```tsx
 import type { ReactNode } from 'react';
-import { SidebarInset, SidebarProvider } from '@overseer/ui';
+import { SidebarInset, SidebarProvider } from '@/shared/ui';
 import type { CampaignSummary } from '@/entities/campaign';
 import { AppSidebar } from './app-sidebar';
 import { TopBar } from './top-bar';
@@ -2607,12 +2605,12 @@ export function AppShell({ children, campaigns, displayName }: AppShellProps) {
 }
 ```
 
-### `apps/web/src/widgets/app-shell/ui/top-bar.tsx`
+### `src/widgets/app-shell/ui/top-bar.tsx`
 
 ```tsx
 import Link from 'next/link';
 import { UserCircle } from 'lucide-react';
-import { Button, SidebarTrigger } from '@overseer/ui';
+import { Button, SidebarTrigger } from '@/shared/ui';
 import { SignOutButton } from '@/features/auth';
 
 type TopBarProps = { displayName: string };
@@ -2658,7 +2656,7 @@ Until the sign-in page exists and works, locking the door would trap you outside
 
 **Next.js 16 renamed `middleware.ts` to `proxy.ts`.** Auth.js's docs still show the old name in places. The Next.js docs at `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md` describe the new convention: a file at `src/proxy.ts` that exports a function named `proxy` or a default function.
 
-### `apps/web/src/proxy.ts`
+### `src/proxy.ts`
 
 ```ts
 export { auth as default } from '@/shared/api/auth';
@@ -2767,21 +2765,21 @@ Parked on purpose:
 
 New:
 
-- `apps/web/src/entities/campaign/model/roles.ts` and `roles.test.ts`
-- `apps/web/src/shared/api/auth.ts`
-- `apps/web/src/app/api/auth/[...nextauth]/route.ts`
-- `apps/web/src/entities/user/` (`model/types.ts`, `model/display-name.ts` and test, `lib/email.ts` and test, `api/user-queries.ts` and test, `api/session.ts` and test, `index.ts`, `server.ts`)
-- `apps/web/src/features/auth/` (`api/auth-actions.ts`, `ui/sign-in-button.tsx`, `ui/sign-out-button.tsx`, `ui/auth-buttons.test.tsx`, `index.ts`)
-- `apps/web/src/features/edit-profile/` (`api/save-display-name.ts`, `ui/display-name-form.tsx` and test, `index.ts`)
-- `apps/web/src/app/sign-in/page.tsx`, `app/welcome/page.tsx`, `app/profile/page.tsx`
-- `apps/web/src/proxy.ts`
+- `src/entities/campaign/model/roles.ts` and `roles.test.ts`
+- `src/shared/api/auth.ts`
+- `src/app/api/auth/[...nextauth]/route.ts`
+- `src/entities/user/` (`model/types.ts`, `model/display-name.ts` and test, `lib/email.ts` and test, `api/user-queries.ts` and test, `api/session.ts` and test, `index.ts`, `server.ts`)
+- `src/features/auth/` (`api/auth-actions.ts`, `ui/sign-in-button.tsx`, `ui/sign-out-button.tsx`, `ui/auth-buttons.test.tsx`, `index.ts`)
+- `src/features/edit-profile/` (`api/save-display-name.ts`, `ui/display-name-form.tsx` and test, `index.ts`)
+- `src/app/sign-in/page.tsx`, `app/welcome/page.tsx`, `app/profile/page.tsx`
+- `src/proxy.ts`
 
 Changed:
 
-- `apps/web/package.json` (the `next-auth` dependency), `apps/web/.env`, `apps/web/.env.example`
-- `apps/web/prisma/schema.prisma` and a fresh `prisma/migrations`
-- `apps/web/src/entities/campaign/index.ts`, `model/types.ts`, `api/campaign-queries.ts` and test
-- `apps/web/src/features/create-campaign/` (`lib/validate-campaign.ts` and test, `api/create-campaign.ts` and test, `ui/player-fields.tsx` and test, `ui/create-campaign-form.tsx` and test)
-- `apps/web/src/features/assign-hex-owner/api/assign-hex-owner.ts` and test, `ui/assign-owner-drawer.test.tsx` (fixture only)
-- `apps/web/src/app/layout.tsx`, `app/page.tsx`, `app/campaigns/page.tsx`, `app/campaigns/new/page.tsx`, `app/campaigns/[campaignId]/page.tsx`
-- `apps/web/src/widgets/app-shell/ui/app-shell.tsx`, `ui/top-bar.tsx`
+- `package.json` (the `next-auth` dependency), `.env`, `.env.example`
+- `prisma/schema.prisma` and a fresh `prisma/migrations`
+- `src/entities/campaign/index.ts`, `model/types.ts`, `api/campaign-queries.ts` and test
+- `src/features/create-campaign/` (`lib/validate-campaign.ts` and test, `api/create-campaign.ts` and test, `ui/player-fields.tsx` and test, `ui/create-campaign-form.tsx` and test)
+- `src/features/assign-hex-owner/api/assign-hex-owner.ts` and test, `ui/assign-owner-drawer.test.tsx` (fixture only)
+- `src/app/layout.tsx`, `app/page.tsx`, `app/campaigns/page.tsx`, `app/campaigns/new/page.tsx`, `app/campaigns/[campaignId]/page.tsx`
+- `src/widgets/app-shell/ui/app-shell.tsx`, `ui/top-bar.tsx`

@@ -8,7 +8,7 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from '@overseer/ui';
+} from '@/shared/ui';
 import { FACTION_GROUPS } from '@/entities/factions';
 
 export type PlayerRole = 'attacker' | 'defender';

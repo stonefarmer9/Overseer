@@ -19,7 +19,7 @@ Treat this as a contract: follow these rules unless explicitly overridden by a h
 ## 1. Project Overview
 
 - **Name:** Overseer
-- **Type:** Monorepo web application
+- **Type:** Single Next.js web application (one `package.json` at the repo root)
 - **Frontend:**
   - Language: TypeScript
   - Framework: Next.js (App Router)
@@ -35,35 +35,35 @@ Agents should assume this is a production-grade app and avoid experimental chang
 
 ## 2. Repository Structure (Feature-Sliced Design)
 
-The monorepo should follow Feature-Sliced Design principles. A typical layout:
+The app follows Feature-Sliced Design. Layout:
 
 ```text
 /
-  apps/
-    web/                # Next.js app (App Router)
-      src/
-        app/            # Routes, layouts, global styles (App Router)
-        features/       # Feature slices (e.g. auth, dashboard, game, etc.)
-          auth/
-          dashboard/
-          game/
-        entities/       # Domain entities (e.g. user, game, match, etc.)
-          user/
-          game/
-        widgets/        # Large composed UI blocks (optional)
-        shared/         # Cross-cutting utilities
-          api/          # Infrastructure clients (e.g. Prisma client)
-          lib/
-          ui/
-  packages/
-    ui/                 # Shared UI components (ShadCN-based, imported as @overseer/ui)
-    config/             # Shared configs (TS, ESLint, Prettier, Tailwind, etc.)
+  src/
+    app/                # Routes, layouts, global styles (App Router)
+    widgets/            # Large composed UI blocks (e.g. app-shell, hex-map)
+    features/           # User interactions (e.g. create-campaign, assign-hex-owner)
+    entities/           # Domain entities (e.g. campaign, hex, factions)
+    shared/             # Business-agnostic code
+      api/              # Infrastructure clients (e.g. Prisma client)
+      lib/              # Generic helpers and hooks (e.g. hex-grid, utils, hooks)
+      ui/               # ShadCN components, imported from `@/shared/ui`
+  prisma/               # Schema and migrations
+  public/
   AGENTS.md
   package.json
   ...
 ```
 
-The FSD layers live under `apps/web/src/`, not at the repo root. Import them with the `@/` alias (e.g. `@/features/auth`, `@/shared/api/db`).
+Layers from highest to lowest: `app` → `widgets` → `features` → `entities` → `shared`. Import them with the `@/` alias (e.g. `@/features/create-campaign`, `@/shared/api/db`).
+
+These boundaries are enforced by ESLint (`no-restricted-imports`, generated per layer and slice in `eslint.config.mjs`), so `npm run lint` fails on:
+
+- imports from a higher layer
+- imports between slices on the same layer
+- imports into another slice's internal files instead of its `index.ts` (or `server.ts` for server-only code)
+
+ESLint cannot catch relative imports that leave a slice (`../../other-slice`). Always use `@/` for cross-slice imports. When a new slice folder is added, the lint config picks it up automatically.
 
 Key FSD rules for agents:
 
@@ -139,7 +139,7 @@ Agents must:
 - Use **App Router** conventions:
   - `app/` for routes, layouts, loading, error boundaries.
   - Server Components by default; use `"use client"` only when needed (interactivity, hooks, browser APIs).
-- Use **ShadCN** components from `packages/ui` or `shared/ui`. Do not recreate equivalent components unless there’s a strong reason.
+- Use **ShadCN** components from `@/shared/ui` (`src/shared/ui`). Add new ones with `npx shadcn add <component>`; `components.json` installs them there. Export each new component from `src/shared/ui/index.ts`. Do not recreate equivalent components unless there’s a strong reason.
 - Co-locate feature-specific components inside their feature slice, e.g.:
   - `features/auth/ui/login-form.tsx`
   - `features/game/ui/game-board.tsx`
@@ -193,12 +193,7 @@ You are an AI coding agent (Claude Code) working on Overseer.
 
 **You are allowed to:**
 
-- Edit frontend files under:
-  - `apps/web`
-  - `features/**`
-  - `entities/**`
-  - `shared/**`
-  - `packages/ui`
+- Edit frontend files under `src/**` (all FSD layers, including `src/shared/ui`).
 - Add new components, hooks, utilities, and tests within these areas.
 - Refactor code while preserving behavior and FSD layering rules.
 - Update documentation (including this `AGENTS.md`) to reflect actual usage.
@@ -208,7 +203,7 @@ You are an AI coding agent (Claude Code) working on Overseer.
 - Changing anything outside frontend (e.g. backend architecture, DB schema, infra, CI/CD).
 - Modifying auth, security, or session-related code.
 - Adding new dependencies or changing package manager configs.
-- Restructuring the monorepo layout or FSD layers.
+- Restructuring the repo layout or FSD layers.
 - Changing public API contracts or breaking existing interfaces.
 
 If a requested task touches any of the above, explicitly ask:
@@ -268,7 +263,7 @@ If asked to add a new feature (e.g. `leaderboard`):
 3. Use entities from `entities/*` and shared utilities from `shared/*` as needed.
 4. Export public API from `features/leaderboard/index.ts`.
 5. Add tests under `features/leaderboard/__tests__` or alongside components.
-6. Integrate into the app via `apps/web/app` routes or layouts.
+6. Integrate into the app via `src/app` routes or layouts.
 
 Agents should follow this pattern for all new features unless told otherwise.
 

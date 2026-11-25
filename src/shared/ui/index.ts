@@ -1,6 +1,6 @@
-export { cn } from './lib/utils';
-export { Button, buttonVariants } from './components/ui/button';
-export { Badge, badgeVariants } from './components/ui/badge';
+export { cn } from '@/shared/lib/utils';
+export { Button, buttonVariants } from './button';
+export { Badge, badgeVariants } from './badge';
 export {
   Card,
   CardHeader,
@@ -9,7 +9,7 @@ export {
   CardAction,
   CardDescription,
   CardContent,
-} from './components/ui/card';
+} from './card';
 export {
   Dialog,
   DialogClose,
@@ -21,9 +21,9 @@ export {
   DialogPortal,
   DialogTitle,
   DialogTrigger,
-} from './components/ui/dialog';
-export { Input } from './components/ui/input';
-export { Label } from './components/ui/label';
+} from './dialog';
+export { Input } from './input';
+export { Label } from './label';
 export {
   Select,
   SelectContent,
@@ -35,7 +35,7 @@ export {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-} from './components/ui/select';
+} from './select';
 export {
   Drawer,
   DrawerPortal,
@@ -47,7 +47,7 @@ export {
   DrawerFooter,
   DrawerTitle,
   DrawerDescription,
-} from './components/ui/drawer';
+} from './drawer';
 export {
   Sidebar,
   SidebarContent,
@@ -73,6 +73,6 @@ export {
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
-} from './components/ui/sidebar';
+} from './sidebar';
 
-export { Collapsible, CollapsibleTrigger, CollapsibleContent } from './components/ui/collapsible';
+export { Collapsible, CollapsibleTrigger, CollapsibleContent } from './collapsible';

@@ -5,8 +5,8 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { PanelLeftIcon } from 'lucide-react';
 import { Slot } from 'radix-ui';
 
-import { useIsMobile } from '../../hooks/use-mobile';
-import { cn } from '../../lib/utils';
+import { useIsMobile } from '@/shared/lib/hooks/use-mobile';
+import { cn } from '@/shared/lib/utils';
 import { Button } from './button';
 import { Input } from './input';
 import { Separator } from './separator';
@@ -569,6 +569,17 @@ function SidebarMenuBadge({ className, ...props }: React.ComponentProps<'div'>) 
   );
 }
 
+const SKELETON_MIN_WIDTH_PERCENT = 50;
+const SKELETON_WIDTH_RANGE_PERCENT = 40;
+
+function skeletonWidth(seed: string) {
+  let hash = 0;
+  for (const char of seed) {
+    hash = (hash * 31 + char.charCodeAt(0)) | 0;
+  }
+  return `${(Math.abs(hash) % SKELETON_WIDTH_RANGE_PERCENT) + SKELETON_MIN_WIDTH_PERCENT}%`;
+}
+
 function SidebarMenuSkeleton({
   className,
   showIcon = false,
@@ -576,10 +587,9 @@ function SidebarMenuSkeleton({
 }: React.ComponentProps<'div'> & {
   showIcon?: boolean;
 }) {
-  // Random width between 50 to 90%.
-  const width = React.useMemo(() => {
-    return `${Math.floor(Math.random() * 40) + 50}%`;
-  }, []);
+  // A varied width between 50 and 90%, derived from useId so the server and
+  // client render the same value.
+  const width = skeletonWidth(React.useId());
 
   return (
     <div

@@ -8,19 +8,17 @@ The SQLite database is not stored in git, so create it after cloning:
 
 ```bash
 npm install
-cp apps/web/.env.example apps/web/.env
-cd apps/web
+cp .env.example .env
 npx prisma migrate deploy   # creates dev.db and applies the migrations
 npx prisma generate         # generates the Prisma client
-cd ../..
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-`apps/web/.env` holds `DATABASE_URL="file:./dev.db"`, a path relative to `apps/web`. Use `prisma migrate deploy` to apply existing migrations. Only use `prisma migrate dev` when you are changing `prisma/schema.prisma`.
+`.env` holds `DATABASE_URL="file:./dev.db"`, a path relative to the repo root. Use `prisma migrate deploy` to apply existing migrations. Only use `prisma migrate dev` when you are changing `prisma/schema.prisma`.
 
-To start again with an empty database, delete `apps/web/dev.db` and run `npx prisma migrate deploy` again.
+To start again with an empty database, delete `dev.db` and run `npx prisma migrate deploy` again.
 
 ## Commands
 
@@ -31,8 +29,8 @@ Run these from the repo root.
 | `npm run dev`       | Start the dev server                                               |
 | `npm run build`     | Production build                                                   |
 | `npm run start`     | Serve the production build                                         |
-| `npm run lint`      | ESLint. Warnings count as failures                                 |
-| `npm run typecheck` | TypeScript check with no output files                              |
+| `npm run lint`      | ESLint, including FSD import boundaries. Warnings count as errors  |
+| `npm run typecheck` | Generate Next.js route types, then TypeScript check with no output |
 | `npm run test`      | Jest and React Testing Library                                     |
 | `npm run verify`    | Typecheck, lint, test and build. Must pass before work is finished |
 | `npm run format`    | Prettier on the whole repo                                         |
@@ -41,10 +39,10 @@ Git commits run `lint-staged` through Husky, which formats staged files with Pre
 
 ## Stack and structure
 
-- Next.js (App Router), React, TypeScript, ShadCN UI (`packages/ui`)
+- Next.js (App Router), React, TypeScript, ShadCN UI (`src/shared/ui`)
 - Prisma with SQLite
 - Jest and React Testing Library
-- Feature-Sliced Design under `apps/web/src`: `app`, `widgets`, `features`, `entities`, `shared`. Slices expose a public `index.ts`, and imports only go downward. See `AGENTS.md` for the full rules.
+- Feature-Sliced Design under `src`: `app`, `widgets`, `features`, `entities`, `shared`. Slices expose a public `index.ts`, and imports only go downward. ESLint enforces the import rules. See `AGENTS.md` for the full rules.
 
 ## Assumptions
 

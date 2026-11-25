@@ -11,7 +11,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@overseer/ui';
+} from '@/shared/ui';
 import { CAMPAIGN_SIZES, DEFAULT_CAMPAIGN_SIZE, type CampaignSize } from '@/entities/campaign';
 import { createCampaign } from '../api/create-campaign';
 import { PlayerFields, type PlayerRole, type PlayerState } from './player-fields';

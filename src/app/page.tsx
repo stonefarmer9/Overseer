@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@overseer/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui';
 
 export default function HomePage() {
   return (
