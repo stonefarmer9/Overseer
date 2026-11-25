@@ -23,7 +23,7 @@ Faction source: `/Users/georgeslevaillant/Projects/overseer/Factions.md`
 
 ### Not covered here
 
-- Real user accounts and login. That is the next step, see `/Users/georgeslevaillant/.opencode/plan/long-term-plan.md`. Until then, players are just names.
+- Real user accounts and login. That is the next step, see [long-term-plan.md](../long-term-plan.md). Until then, players are just names.
 - The "creator only" and "campaigns you are part of" rules. These need user accounts to enforce, so they are deferred (see Section 1).
 
 ### Why this order
@@ -296,7 +296,7 @@ model Hex {
 - **`onDelete: Cascade`:** deleting a campaign deletes its players and hexes. Without it, deleting a campaign would fail while it still has hexes.
 - **`ownerId` is a relation to `Player`:** the database refuses an owner that doesn't exist. The old values `red` / `blue` / `green` are not `Player` ids, so the old hex data becomes invalid. D6 says to remove it anyway.
 - **`Player.hexes`:** the other side of `Hex.owner`. Prisma needs both sides of a relation declared.
-- **Reassignment is just an update.** Changing `ownerId` moves a hex from one player to the other. No extra table is needed for now. Battle history (in `/Users/georgeslevaillant/.opencode/plan/long-term-plan.md`) would add one later.
+- **Reassignment is just an update.** Changing `ownerId` moves a hex from one player to the other. No extra table is needed for now. Battle history (in [long-term-plan.md](../long-term-plan.md)) would add one later.
 
 ### Migration steps
 
@@ -2032,7 +2032,7 @@ Add this paragraph inside the `<header>` in `apps/web/src/app/campaigns/[campaig
 
 ### What comes next
 
-User profiles, sign-in, and "only the creator" enforcement. See `/Users/georgeslevaillant/.opencode/plan/long-term-plan.md`. That work needs your approval because it touches auth and sessions (AGENTS.md section 6).
+User profiles, sign-in, and "only the creator" enforcement. See [long-term-plan.md](../long-term-plan.md). That work needs your approval because it touches auth and sessions (AGENTS.md section 6).
 
 ---
 

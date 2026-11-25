@@ -6,9 +6,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
+<!-- END:nextjs-agent-rules -->
+
 # AGENTS.md – Overseer
 
-This file defines how AI coding agents (e.g. GPT-based assistants) should behave when working in the **Overseer** codebase.
+This file defines how AI coding agents (Claude Code, which loads it through `CLAUDE.md`) should behave when working in the **Overseer** codebase.
 
 Treat this as a contract: follow these rules unless explicitly overridden by a human.
 
@@ -25,7 +27,7 @@ Treat this as a contract: follow these rules unless explicitly overridden by a h
 - **Backend:** TBD (assume Next.js API routes / server actions until specified otherwise)
 - **Design Architecture:** Feature-Sliced Design (FSD)
 - **Auth:** NextAuth with a free provider (e.g. GitHub, Google, etc.)
-- **Primary AI Model:** GPT-based assistant
+- **Primary AI agent:** Claude Code (configured in `.claude/`, see section 9)
 
 Agents should assume this is a production-grade app and avoid experimental changes without explicit permission.
 
@@ -98,6 +100,15 @@ npm run lint
 
 # Run tests (Jest + React Testing Library)
 npm run test
+
+# Type-check without emitting files
+npm run typecheck
+
+# Typecheck, lint, test and build. Must pass before work is finished
+npm run verify
+
+# Format the whole repo with Prettier
+npm run format
 ```
 
 If new scripts are added (e.g. `test:watch`, `test:e2e`), update this section accordingly.
@@ -178,7 +189,7 @@ Agents should:
 
 ## 8. Agent Permissions & Boundaries
 
-You are a GPT-based coding assistant for Overseer.
+You are an AI coding agent (Claude Code) working on Overseer.
 
 **You are allowed to:**
 
@@ -206,7 +217,24 @@ If a requested task touches any of the above, explicitly ask:
 
 ---
 
-## 9. Working with GPT-based Agents
+## 9. Working with Claude Code
+
+`CLAUDE.md` imports this file, so these rules apply to every Claude Code session. Project tooling lives in `.claude/`:
+
+- **Subagents** (`.claude/agents/`):
+  - `peon`: mechanical edits such as renames, moving files, updating imports and fixing lint or type errors.
+  - `tester`: writes Jest and React Testing Library tests and never changes source files.
+  - `reviewer`: read-only review against these rules.
+- **Skills** (`.claude/skills/`):
+  - `/ship`: verify, review, then commit. Only a human can start it, and it never pushes.
+  - `fsd-architecture-review`: Feature-Sliced Design check after frontend changes.
+  - `prettier-on-commit`: checks that the Husky and lint-staged Prettier hook is set up.
+- **Permissions** (`.claude/settings.json`): edited only by a human. Agents must not change their own permissions.
+
+Agents must:
+
+- Treat a task as finished only when `npm run verify` passes from the repo root.
+- Never bypass git hooks (`--no-verify`), push, or commit without the human's approval.
 
 When generating code:
 
@@ -258,5 +286,3 @@ Agents should follow this pattern for all new features unless told otherwise.
 
 **Default rule:**  
 If something is unclear or could impact architecture, security, or stability, **ask before changing**.
-
-<!-- END:nextjs-agent-rules -->

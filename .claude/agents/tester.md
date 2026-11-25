@@ -1,17 +1,8 @@
 ---
+name: tester
 description: Writes unit and component tests with Jest and React Testing Library for pure logic (campaign sizes, factions, validation, hex grid) and simple components. Never modifies source code.
-mode: subagent
-model: openrouter/anthropic/claude-sonnet-5.5
-temperature: 0.1
-permission:
-  edit: allow
-  bash:
-    '*': ask
-    'npm run verify*': allow
-    'npm test*': allow
-    'npm run test*': allow
-    'npm run typecheck*': allow
-    'npm run lint*': allow
+tools: Read, Edit, Write, Bash, Grep, Glob
+model: sonnet
 ---
 
 You write tests for Overseer, a Next.js (App Router), React and TypeScript project using Jest, ts-jest and React Testing Library. Read AGENTS.md first and follow its rules, including strict typing: no `any`, no `@ts-ignore`, no `eslint-disable`, no non-null assertions.

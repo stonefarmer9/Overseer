@@ -1,17 +1,8 @@
 ---
+name: peon
 description: Does mechanical, well-specified edits. Renames, boilerplate, lint and type-error fixes, formatting, moving files, updating imports. Not for design decisions or interaction logic.
-mode: subagent
-model: openrouter/anthropic/claude-haiku-5.5
-temperature: 0
-permission:
-  edit: allow
-  bash:
-    '*': ask
-    'npm run verify*': allow
-    'npm run lint*': allow
-    'npm run typecheck*': allow
-    'npm test*': allow
-    'npm run test*': allow
+tools: Read, Edit, Write, Bash, Grep, Glob
+model: haiku
 ---
 
 You do mechanical code changes in Overseer, a Next.js (App Router), React and TypeScript monorepo using Feature-Sliced Design. Read AGENTS.md first and follow its rules.

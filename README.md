@@ -54,7 +54,7 @@ Git commits run `lint-staged` through Husky, which formats staged files with Pre
 
 ## Agent tooling
 
-`.opencode/` configures AI agents for this repo: `peon` (mechanical edits), `tester` (tests), `reviewer` (read-only review), a `/ship` command (verify, review, commit) and skills for FSD review and Prettier-on-commit. Agents follow `AGENTS.md`, never bypass git hooks, and do not finish a task until `npm run verify` passes.
+`.claude/` configures Claude Code for this repo: subagents `peon` (mechanical edits), `tester` (tests) and `reviewer` (read-only review), a `/ship` skill (verify, review, commit) and skills for FSD review and Prettier-on-commit. `CLAUDE.md` imports `AGENTS.md`, so agents follow its rules: they never bypass git hooks, and a task is not finished until `npm run verify` passes. Permissions live in `.claude/settings.json`, which only a human edits.
 
 ## Screenshots - New Campaign flow
 
